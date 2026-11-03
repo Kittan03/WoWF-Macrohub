@@ -1,0 +1,3786 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WoW: Forever — Macro Builder</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Base de datos local generada desde Wowhead (WoW: Forever) por tools/fetch-wowhead.ps1 -->
+  <script src="data/wowhead-forever-db.js"></script>
+  <!-- Google Fonts: Inter (UI) & JetBrains Mono (Code) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #090a0d;
+      color: #d4d4d8;
+      user-select: none;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Minimalist Panel Surface */
+    .panel-surface {
+      background-color: #111318;
+      border: 1px solid #22252f;
+    }
+
+    .panel-header {
+      background-color: #14171d;
+      border-bottom: 1px solid #22252f;
+    }
+
+    /* Minimalist Scratch Block */
+    .scratch-block {
+      position: relative;
+      background-color: #171a21;
+      border: 1px solid #282c37;
+      border-radius: 6px;
+      transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
+    }
+
+    .scratch-block:hover {
+      background-color: #1b1f27;
+      border-color: #383e4e;
+    }
+
+    /* Subtle puzzle connector on stacked canvas blocks */
+    .scratch-stack-block {
+      position: relative;
+      margin-bottom: 4px;
+    }
+
+    .scratch-stack-block::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 18px;
+      width: 20px;
+      height: 5px;
+      background: #171a21;
+      border-left: 1px solid #282c37;
+      border-right: 1px solid #282c37;
+      border-bottom: 1px solid #282c37;
+      border-bottom-left-radius: 3px;
+      border-bottom-right-radius: 3px;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    /* Distinct Minimalist Category Accents (Crisp Left Bar + Subtle Tinted Surface + Command Badge Tint) */
+    .cat-header {
+      background: linear-gradient(90deg, rgba(245, 158, 11, 0.11) 0%, rgba(23, 26, 33, 0.95) 100%);
+      border-color: rgba(245, 158, 11, 0.28);
+      border-left: 4px solid #f59e0b;
+    }
+    .cat-header:hover {
+      background: linear-gradient(90deg, rgba(245, 158, 11, 0.17) 0%, rgba(27, 31, 39, 0.98) 100%);
+      border-color: rgba(245, 158, 11, 0.45);
+      border-left: 4px solid #fbbf24;
+    }
+    .cat-header .cmd-badge {
+      color: #fcd34d;
+      background-color: rgba(245, 158, 11, 0.14);
+      border-color: rgba(245, 158, 11, 0.35);
+    }
+
+    .cat-combat {
+      background: linear-gradient(90deg, rgba(59, 130, 246, 0.11) 0%, rgba(23, 26, 33, 0.95) 100%);
+      border-color: rgba(59, 130, 246, 0.28);
+      border-left: 4px solid #3b82f6;
+    }
+    .cat-combat:hover {
+      background: linear-gradient(90deg, rgba(59, 130, 246, 0.17) 0%, rgba(27, 31, 39, 0.98) 100%);
+      border-color: rgba(59, 130, 246, 0.45);
+      border-left: 4px solid #60a5fa;
+    }
+    .cat-combat .cmd-badge {
+      color: #93c5fd;
+      background-color: rgba(59, 130, 246, 0.14);
+      border-color: rgba(59, 130, 246, 0.35);
+    }
+
+    .cat-pet {
+      background: linear-gradient(90deg, rgba(239, 68, 68, 0.11) 0%, rgba(23, 26, 33, 0.95) 100%);
+      border-color: rgba(239, 68, 68, 0.28);
+      border-left: 4px solid #ef4444;
+    }
+    .cat-pet:hover {
+      background: linear-gradient(90deg, rgba(239, 68, 68, 0.17) 0%, rgba(27, 31, 39, 0.98) 100%);
+      border-color: rgba(239, 68, 68, 0.45);
+      border-left: 4px solid #f87171;
+    }
+    .cat-pet .cmd-badge {
+      color: #fca5a5;
+      background-color: rgba(239, 68, 68, 0.14);
+      border-color: rgba(239, 68, 68, 0.35);
+    }
+
+    .cat-equip {
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.11) 0%, rgba(23, 26, 33, 0.95) 100%);
+      border-color: rgba(16, 185, 129, 0.28);
+      border-left: 4px solid #10b981;
+    }
+    .cat-equip:hover {
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.17) 0%, rgba(27, 31, 39, 0.98) 100%);
+      border-color: rgba(16, 185, 129, 0.45);
+      border-left: 4px solid #34d399;
+    }
+    .cat-equip .cmd-badge {
+      color: #6ee7b7;
+      background-color: rgba(16, 185, 129, 0.14);
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+
+    .cat-target {
+      background: linear-gradient(90deg, rgba(168, 85, 247, 0.11) 0%, rgba(23, 26, 33, 0.95) 100%);
+      border-color: rgba(168, 85, 247, 0.28);
+      border-left: 4px solid #a855f7;
+    }
+    .cat-target:hover {
+      background: linear-gradient(90deg, rgba(168, 85, 247, 0.17) 0%, rgba(27, 31, 39, 0.98) 100%);
+      border-color: rgba(168, 85, 247, 0.45);
+      border-left: 4px solid #c084fc;
+    }
+    .cat-target .cmd-badge {
+      color: #d8b4fe;
+      background-color: rgba(168, 85, 247, 0.14);
+      border-color: rgba(168, 85, 247, 0.35);
+    }
+
+    .cat-racial {
+      background: linear-gradient(90deg, rgba(20, 184, 166, 0.12) 0%, rgba(23, 26, 33, 0.95) 100%);
+      border-color: rgba(20, 184, 166, 0.30);
+      border-left: 4px solid #14b8a6;
+    }
+    .cat-racial:hover {
+      background: linear-gradient(90deg, rgba(20, 184, 166, 0.18) 0%, rgba(27, 31, 39, 0.98) 100%);
+      border-color: rgba(20, 184, 166, 0.48);
+      border-left: 4px solid #2dd4bf;
+    }
+    .cat-racial .cmd-badge {
+      color: #5eead4;
+      background-color: rgba(20, 184, 166, 0.14);
+      border-color: rgba(20, 184, 166, 0.35);
+    }
+
+    /* Minimalist Conditional Pill (Distinct Warm Orange Accent) */
+    .cat-cond {
+      background-color: rgba(249, 115, 22, 0.13);
+      border: 1px solid rgba(249, 115, 22, 0.42);
+      color: #fdba74;
+      border-radius: 5px;
+      padding: 2px 8px;
+      transition: all 0.12s ease;
+    }
+    .cat-cond:hover {
+      border-color: #fb923c;
+      color: #ffedd5;
+      background-color: rgba(249, 115, 22, 0.24);
+    }
+
+    /* Condition Drop Slot */
+    .cond-slot {
+      background-color: #0e1015;
+      border: 1px dashed #323746;
+      border-radius: 5px;
+      transition: all 0.15s ease;
+    }
+
+    .cond-slot.drag-over {
+      background-color: #191d26;
+      border-color: #f97316;
+    }
+
+    .canvas-dropzone.drag-over {
+      border-color: #525866;
+      background-color: rgba(255, 255, 255, 0.015);
+    }
+
+    /* Minimalist Inputs inside blocks */
+    .scratch-input {
+      background-color: #0d0f14;
+      border: 1px solid #2a2e3b;
+      color: #e4e4e7;
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 0.775rem;
+      font-weight: 500;
+    }
+    .scratch-input:focus {
+      outline: none;
+      border-color: #71717a;
+    }
+
+    /* Filter Select Dropdowns */
+    .filter-select {
+      background-color: #14171f;
+      border: 1px solid #262a36;
+      color: #e4e4e7;
+      border-radius: 5px;
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .filter-select:focus {
+      outline: none;
+      border-color: #525866;
+    }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #272a34;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3b404f;
+    }
+
+    /* Minimalist Icon Slot */
+    .wow-icon-slot {
+      width: 38px;
+      height: 38px;
+      border-radius: 5px;
+      border: 1px solid #282c37;
+      background-color: #16181f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+    .wow-icon-slot:hover {
+      border-color: #525866;
+      background-color: #1d2029;
+    }
+    .wow-icon-slot.active {
+      border-color: #f59e0b;
+      background-color: #1f222b;
+    }
+
+    /* Official Wowhead Forever Floating Tooltip Styling */
+    .wh-floating-tooltip {
+      position: fixed;
+      z-index: 9999;
+      pointer-events: none;
+      max-width: 340px;
+      min-width: 220px;
+      background: rgba(11, 13, 19, 0.97);
+      border: 1px solid #524426;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(255, 209, 0, 0.12);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 12px;
+      line-height: 1.38;
+      color: #ffffff;
+    }
+    .wh-floating-tooltip table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .wh-floating-tooltip td, .wh-floating-tooltip th {
+      padding: 0;
+      vertical-align: top;
+      font-weight: 400;
+    }
+    .wh-floating-tooltip th {
+      text-align: right;
+      color: #d4d4d8;
+      padding-left: 12px;
+    }
+    .wh-floating-tooltip b.whtt-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+    .wh-floating-tooltip a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .wh-floating-tooltip .q { color: #ffd100 !important; }
+    .wh-floating-tooltip .q0 { color: #9d9d9d !important; }
+    .wh-floating-tooltip .q1 { color: #ffffff !important; }
+    .wh-floating-tooltip .q2 { color: #1eff00 !important; }
+    .wh-floating-tooltip .q3 { color: #0070dd !important; }
+    .wh-floating-tooltip .q4 { color: #a335ee !important; }
+    .wh-floating-tooltip .q5 { color: #ff8000 !important; }
+    .wh-floating-tooltip .wowhead-tooltip-requirements {
+      color: #a1a1aa;
+      font-size: 11px;
+      margin-top: 2px;
+    }
+    .wh-floating-tooltip .moneygold { color: #ffd100; padding-right: 4px; }
+    .wh-floating-tooltip .moneysilver { color: #d4d4d8; padding-right: 4px; }
+    .wh-floating-tooltip .moneycopper { color: #d97706; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans text-zinc-300">
+
+  <!-- FLOATING WOWHEAD FOREVER TOOLTIP -->
+  <div id="whFloatingTooltip" class="wh-floating-tooltip hidden"></div>
+
+  <!-- TOP HEADER BAR -->
+  <header class="bg-[#0d0f14] border-b border-[#1f222b] px-4 lg:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-40">
+    <div class="flex items-center gap-3">
+      <div class="w-7 h-7 rounded bg-[#181b24] border border-[#2c313f] flex items-center justify-center text-zinc-200 font-mono font-semibold text-xs">
+        W+
+      </div>
+      <div class="flex items-baseline gap-2.5">
+        <h1 class="text-sm font-semibold tracking-tight text-zinc-100">
+          WoW: Forever Macro Builder
+        </h1>
+        <span id="uiSubtitle" class="text-[11px] text-zinc-500 hidden sm:inline">
+          Constructor visual de macros Classic+
+        </span>
+      </div>
+    </div>
+
+    <!-- Right Header Controls: Web Language (Flags) + Client Language + Rules -->
+    <div class="flex flex-wrap items-center gap-2">
+      <!-- Web Interface Language Selector by Flag -->
+      <div class="flex items-center bg-[#14171f] border border-[#252934] rounded-md p-0.5 text-xs" title="Idioma de la Web / Web UI Language">
+        <span id="uiWebLangLabel" class="text-[11px] text-zinc-500 px-2">Web:</span>
+        <button
+          id="webLangEsBtn"
+          onclick="setWebLanguage('es')"
+          class="px-2 py-1 rounded flex items-center gap-1.5 text-[11px] font-medium transition-all bg-[#252934] text-zinc-100 ring-1 ring-amber-500/40"
+          title="Español"
+        >
+          <svg class="w-4 h-3 rounded-[2px] shrink-0" viewBox="0 0 640 480">
+            <path fill="#AA151B" d="M0 0h640v480H0z"/>
+            <path fill="#F1BF00" d="M0 120h640v240H0z"/>
+          </svg>
+          <span>ES</span>
+        </button>
+        <button
+          id="webLangEnBtn"
+          onclick="setWebLanguage('en')"
+          class="px-2 py-1 rounded flex items-center gap-1.5 text-[11px] font-medium transition-all text-zinc-400 hover:text-zinc-200 opacity-75 hover:opacity-100"
+          title="English"
+        >
+          <svg class="w-4 h-3 rounded-[2px] shrink-0" viewBox="0 0 640 480">
+            <path fill="#012169" d="M0 0h640v480H0z"/>
+            <path fill="#FFF" d="m75 0 244 181L562 0h78v62L400 241l240 178v61h-80L320 301 81 480H0v-60l239-178L0 64V0h75z"/>
+            <path fill="#C8102E" d="m424 281 216 159v40L369 281h55zm-184 20 6 35L54 480H0l240-179zM640 0v3L391 191l2-44L590 0h50zM0 0l239 176h-60L0 42V0z"/>
+            <path fill="#FFF" d="M241 0v480h160V0H241zM0 160v160h640V160H0z"/>
+            <path fill="#C8102E" d="M0 193v96h640v-96H0zM273 0v480h96V0h-96z"/>
+          </svg>
+          <span>EN</span>
+        </button>
+      </div>
+
+      <!-- Output Macro Language Indicator (synced with the web language flag) -->
+      <div class="flex items-center bg-[#14171f] border border-[#252934] rounded-md px-2 py-1 text-xs gap-1.5" title="El idioma de la macro sigue al idioma seleccionado">
+        <span id="uiClientLabel" class="text-[11px] text-zinc-500">Macro:</span>
+        <span id="clientRankIndicator" class="text-[11px] font-mono text-zinc-200">(Rango X)</span>
+      </div>
+
+      <button id="uiRulesBtn" onclick="openHelpModal()" class="px-2.5 py-1 rounded-md bg-[#14171f] hover:bg-[#1c202b] border border-[#252934] text-zinc-300 text-xs font-medium transition">
+        Reglas
+      </button>
+    </div>
+  </header>
+
+  <!-- GLOBAL FILTER BAR: CLASS, RACE (RACIALS) & MISC (ITEMS / TRINKETS / ETC.) -->
+  <div class="bg-[#0c0e13] border-b border-[#1f222b] px-4 lg:px-6 py-2">
+    <div class="max-w-[1800px] mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex flex-wrap items-center gap-2.5">
+        <span id="uiFilterBarLabel" class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+          Filtrar por:
+        </span>
+
+        <!-- 1. Class Filter -->
+        <div class="flex items-center gap-1.5">
+          <label id="uiClassFilterLabel" for="classFilterSelect" class="text-[11px] text-zinc-500">Clase:</label>
+          <select id="classFilterSelect" onchange="setClassFilter(this.value)" class="filter-select">
+            <!-- Populated by JS -->
+          </select>
+        </div>
+
+        <!-- 2. Race / Racials Filter -->
+        <div class="flex items-center gap-1.5">
+          <label id="uiRaceFilterLabel" for="raceFilterSelect" class="text-[11px] text-zinc-500">Raza (Raciales):</label>
+          <select id="raceFilterSelect" onchange="setRaceFilter(this.value)" class="filter-select">
+            <!-- Populated by JS -->
+          </select>
+        </div>
+
+        <!-- 3. Misc / Utility Filter -->
+        <div class="flex items-center gap-1.5">
+          <label id="uiMiscFilterLabel" for="miscFilterSelect" class="text-[11px] text-zinc-500">Variados:</label>
+          <select id="miscFilterSelect" onchange="setMiscFilter(this.value)" class="filter-select">
+            <!-- Populated by JS -->
+          </select>
+        </div>
+
+        <button
+          id="resetFiltersBtn"
+          onclick="resetAllFilters()"
+          class="hidden px-2 py-1 rounded bg-[#1b1f29] hover:bg-[#252a38] border border-[#2e3444] text-[11px] text-zinc-300 transition"
+        >
+          Limpiar filtros ✕
+        </button>
+      </div>
+
+      <!-- Right: Wowhead Forever DB Status + Live Spell/Item ID Lookup + Active Filter Status -->
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="flex items-center gap-1.5 bg-[#14171f] border border-[#252934] rounded-md px-2 py-1 text-[11px]">
+          <span id="whConnDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span id="whConnText" class="text-zinc-300 font-medium">Wowhead Forever DB</span>
+          <span id="whCountsText" class="text-zinc-500 font-mono"></span>
+        </div>
+
+        <div class="flex items-center gap-1 bg-[#14171f] border border-[#252934] rounded-md px-1.5 py-0.5">
+          <select id="whLookupType" class="bg-transparent text-[11px] text-zinc-400 focus:outline-none cursor-pointer">
+            <option value="spell" class="bg-[#111318]">spell=</option>
+            <option value="item" class="bg-[#111318]">item=</option>
+          </select>
+          <input
+            id="whLookupIdInput"
+            type="text"
+            placeholder="ID o nombre"
+            onkeydown="if(event.key==='Enter') fetchLiveWowheadById()"
+            class="w-28 bg-[#0d0f14] border border-[#262a36] rounded px-1.5 py-0.5 text-[11px] font-mono text-zinc-200 focus:outline-none"
+          />
+          <button
+            id="whLookupBtn"
+            onclick="fetchLiveWowheadById()"
+            class="px-2 py-0.5 rounded bg-[#222631] hover:bg-[#2c3140] text-[11px] text-zinc-200 font-medium transition"
+          >
+            + Wowhead
+          </button>
+        </div>
+
+        <div id="activeFilterStatus" class="text-[11px] text-zinc-500 hidden xl:block">
+          Mostrando todos los bloques y plantillas
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN 3-COLUMN WORKSPACE -->
+  <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 p-3 max-w-[1800px] w-full mx-auto">
+
+    <!-- ======================================================================= -->
+    <!-- LEFT PANEL: MINIMALIST BLOCK PALETTE (3 Columns)                        -->
+    <!-- ======================================================================= -->
+    <section class="lg:col-span-3 panel-surface rounded-lg flex flex-col overflow-hidden max-h-[calc(100vh-118px)]">
+      <div class="panel-header px-3.5 py-2.5 flex items-center justify-between">
+        <h2 id="uiPaletteTitle" class="text-xs font-semibold text-zinc-200 uppercase tracking-wider">Bloques</h2>
+        <span id="uiPaletteHint" class="text-[11px] text-zinc-500">Arrastra o haz clic</span>
+      </div>
+
+      <!-- Category Filter Tabs -->
+      <div class="grid grid-cols-3 gap-1 p-2 bg-[#0d0f14] border-b border-[#1f222b] text-[11px] font-medium">
+        <button onclick="filterPalette('all')" id="tab-all" class="palette-tab py-1 px-2 rounded bg-[#222631] text-zinc-100">Todos</button>
+        <button onclick="filterPalette('cond')" id="tab-cond" class="palette-tab py-1 px-2 rounded text-zinc-400 hover:text-zinc-200 hover:bg-[#191c24]">Condición</button>
+        <button onclick="filterPalette('combat')" id="tab-combat" class="palette-tab py-1 px-2 rounded text-zinc-400 hover:text-zinc-200 hover:bg-[#191c24]">Acciones</button>
+      </div>
+
+      <!-- Scrollable Blocks List -->
+      <div id="paletteContainer" class="flex-1 overflow-y-auto p-3 space-y-5">
+
+        <!-- DYNAMIC CONTEXTUAL PRESET BLOCKS (Class Spells, Racials, Misc Trinkets/Items, or Search) -->
+        <div id="contextualPaletteGroup" class="space-y-2 pb-3 border-b border-[#222631]">
+          <div class="flex items-center justify-between">
+            <h3 id="contextualPaletteTitle" class="text-[11px] font-semibold uppercase tracking-wider text-teal-400 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-teal-400 shadow-[0_0_6px_rgba(20,184,166,0.6)]"></span>
+              <span>Wowhead Forever</span>
+            </h3>
+            <span id="contextualPaletteCount" class="text-[10px] font-mono text-zinc-500"></span>
+          </div>
+          <div class="relative">
+            <input
+              id="paletteSpellSearch"
+              type="text"
+              oninput="renderContextualPalette()"
+              placeholder="Buscar hechizo u objeto (ej. Tótem, Penitencia)..."
+              class="w-full bg-[#0d0f14] border border-[#282d3b] focus:border-teal-500/60 rounded px-2.5 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none"
+            />
+          </div>
+          <div id="palette-contextual" class="space-y-1.5 max-h-64 overflow-y-auto pr-0.5"></div>
+        </div>
+
+        <!-- 1. CABECERAS -->
+        <div class="palette-group" data-cat="header">
+          <div class="flex items-center justify-between mb-1.5">
+            <h3 class="text-[11px] font-semibold uppercase tracking-wider text-amber-400/90 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.6)]"></span>
+              <span id="uiCatHeaders">Cabeceras</span>
+            </h3>
+          </div>
+          <div class="space-y-1.5" id="palette-headers"></div>
+        </div>
+
+        <!-- 2. CONDICIONALES ENCAJABLES -->
+        <div class="palette-group" data-cat="cond">
+          <div class="flex items-center justify-between mb-1">
+            <h3 class="text-[11px] font-semibold uppercase tracking-wider text-orange-400/90 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.6)]"></span>
+              <span id="uiCatCond">Condicionales</span>
+            </h3>
+            <span id="uiCatCondSub" class="text-[10px] text-orange-300/70">Encajables</span>
+          </div>
+          <p id="uiCatCondDesc" class="text-[11px] text-zinc-500 mb-2 leading-snug">
+            Arrastra o haz clic para insertar en <span class="text-orange-300 font-mono">[+ Condición]</span>.
+          </p>
+          <div class="flex flex-wrap gap-1" id="palette-conditionals"></div>
+        </div>
+
+        <!-- 3. ACCIONES DE COMBATE Y HECHIZOS -->
+        <div class="palette-group" data-cat="combat">
+          <div class="flex items-center justify-between mb-1.5">
+            <h3 class="text-[11px] font-semibold uppercase tracking-wider text-blue-400/90 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.6)]"></span>
+              <span id="uiCatCombat">Combate y Hechizos</span>
+            </h3>
+          </div>
+          <div class="space-y-1.5" id="palette-combat"></div>
+        </div>
+
+        <!-- 4. ATAQUE Y MASCOTAS -->
+        <div class="palette-group" data-cat="pet">
+          <div class="flex items-center justify-between mb-1.5">
+            <h3 class="text-[11px] font-semibold uppercase tracking-wider text-red-400/90 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)]"></span>
+              <span id="uiCatPet">Ataque y Mascotas</span>
+            </h3>
+          </div>
+          <div class="space-y-1.5" id="palette-pet"></div>
+        </div>
+
+        <!-- 5. EQUIPAMIENTO Y RANURAS -->
+        <div class="palette-group" data-cat="equip">
+          <div class="flex items-center justify-between mb-1.5">
+            <h3 class="text-[11px] font-semibold uppercase tracking-wider text-emerald-400/90 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]"></span>
+              <span id="uiCatEquip">Equipamiento</span>
+            </h3>
+            <span class="text-[10px] text-emerald-400/70">Slots 16 / 17</span>
+          </div>
+          <div class="space-y-1.5" id="palette-equip"></div>
+        </div>
+
+        <!-- 6. OBJETIVOS -->
+        <div class="palette-group" data-cat="target">
+          <div class="flex items-center justify-between mb-1.5">
+            <h3 class="text-[11px] font-semibold uppercase tracking-wider text-purple-400/90 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_6px_rgba(168,85,247,0.6)]"></span>
+              <span id="uiCatTarget">Objetivos</span>
+            </h3>
+          </div>
+          <div class="space-y-1.5" id="palette-target"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================================================================= -->
+    <!-- CENTER PANEL: ASSEMBLY CANVAS (5 Columns)                               -->
+    <!-- ======================================================================= -->
+    <section class="lg:col-span-5 panel-surface rounded-lg flex flex-col overflow-hidden max-h-[calc(100vh-118px)]">
+      <!-- Canvas Header -->
+      <div class="panel-header px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <h2 id="uiCanvasTitle" class="text-xs font-semibold text-zinc-200 uppercase tracking-wider">
+            Lienzo de Ensamblaje
+          </h2>
+          <span id="blockCountBadge" class="px-1.5 py-0.5 text-[10px] rounded bg-[#1e222d] text-zinc-400 font-mono">
+            0 líneas
+          </span>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <button onclick="toggleAllExplanations()" id="toggleExplainBtn" class="px-2 py-1 rounded bg-[#1b1f29] hover:bg-[#242936] border border-[#2c313f] text-zinc-300 text-[11px] font-medium transition">
+            Explicaciones
+          </button>
+          <button onclick="clearCanvas()" id="uiClearBtn" class="px-2 py-1 rounded bg-[#1b1f29] hover:bg-[#2a1f24] border border-[#2c313f] text-zinc-400 hover:text-rose-300 text-[11px] font-medium transition">
+            Limpiar
+          </button>
+        </div>
+      </div>
+
+      <!-- Subtle Logic Legend -->
+      <div class="bg-[#0d0f14] border-b border-[#1f222b] px-4 py-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px] text-zinc-500">
+        <div id="uiLegendAnd">
+          <span class="font-mono text-zinc-300">[a,b]</span> = lógica Y (AND)
+        </div>
+        <div id="uiLegendOr">
+          <span class="font-mono text-zinc-300">[a][b]</span> = lógica O (usa <span class="text-zinc-300">+ OR</span> para respaldo)
+        </div>
+      </div>
+
+      <!-- Active Conditional Carry Bar -->
+      <div id="activeCondBanner" class="hidden bg-[#191c24] border-b border-[#323846] px-4 py-1.5 flex items-center justify-between text-xs text-zinc-200">
+        <div class="flex items-center gap-2">
+          <span id="uiSelectedCondText">Seleccionado: <strong id="activeCondLabel" class="font-mono text-white"></strong> — Haz clic en un hueco <span class="font-mono text-zinc-400">[+ Condición]</span></span>
+        </div>
+        <button id="uiCancelCondBtn" onclick="clearSelectedCond()" class="px-2 py-0.5 rounded bg-[#252934] hover:bg-[#2f3442] text-zinc-300 text-[11px]">Cancelar</button>
+      </div>
+
+      <!-- Dropzone Canvas Area -->
+      <div
+        id="canvasDropzone"
+        class="canvas-dropzone flex-1 overflow-y-auto p-3.5 space-y-2.5 border border-dashed border-transparent transition-all relative"
+        ondragover="handleCanvasDragOver(event)"
+        ondragleave="handleCanvasDragLeave(event)"
+        ondrop="handleCanvasDrop(event)"
+      >
+        <!-- Rendered dynamically by JS -->
+      </div>
+
+      <!-- Bottom Status Footer -->
+      <div class="bg-[#0d0f14] border-t border-[#1f222b] px-4 py-2 flex items-center justify-between gap-2 text-[11px] text-zinc-500">
+        <span id="uiFooterNote">Rango Máx Automático omite <code class="text-zinc-300">(Rango X)</code> para escalar con el instructor.</span>
+        <span id="statusToast" class="text-emerald-400 font-medium opacity-0 transition-opacity duration-300">Copiado</span>
+      </div>
+    </section>
+
+    <!-- ======================================================================= -->
+    <!-- RIGHT PANEL: OUTPUT, PREVIEW & TEMPLATES (4 Columns)                    -->
+    <!-- ======================================================================= -->
+    <section class="lg:col-span-4 panel-surface rounded-lg flex flex-col overflow-hidden max-h-[calc(100vh-118px)]">
+      <div class="panel-header px-4 py-2.5 flex items-center justify-between">
+        <h2 id="uiOutputTitle" class="text-xs font-semibold text-zinc-200 uppercase tracking-wider">
+          Salida y Plantillas
+        </h2>
+        <span class="text-[11px] font-mono text-zinc-500">/macro</span>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-3.5 space-y-3.5">
+
+        <!-- MACRO IDENTITY & ICON -->
+        <div class="bg-[#14171f] border border-[#222631] rounded-md p-3 space-y-3">
+          <!-- Save Type Tabs: General vs Character -->
+          <div class="grid grid-cols-2 gap-1 bg-[#0d0f14] p-1 rounded border border-[#1f222b]">
+            <button id="scopeGeneralBtn" onclick="setMacroScope('general')" class="py-1 px-2 rounded text-[11px] font-medium transition-all bg-[#222631] text-zinc-100">
+              Macros Generales
+            </button>
+            <button id="scopeCharBtn" onclick="setMacroScope('character')" class="py-1 px-2 rounded text-[11px] font-medium transition-all text-zinc-500 hover:text-zinc-300">
+              Macros de Personaje
+            </button>
+          </div>
+
+          <!-- Active Preview Header (Icon + Name input limited to 16 chars) -->
+          <div class="flex items-center gap-3">
+            <div
+              id="selectedIconPreview"
+              class="wow-icon-slot active shrink-0 overflow-hidden relative"
+              onmouseenter="showMacroPreviewTooltip(event)"
+              onmousemove="moveWhTooltip(event)"
+              onmouseleave="hideWhTooltip()"
+            >
+              <img id="selectedIconImg" src="https://wow.zamimg.com/images/wow/icons/medium/inv_misc_questionmark.jpg" alt="" class="w-full h-full object-cover rounded-[4px]" />
+              <span id="selectedIconEmoji" class="hidden">?</span>
+            </div>
+
+            <div class="flex-1">
+              <div class="flex items-center justify-between mb-1">
+                <label id="uiMacroNameLabel" for="macroNameInput" class="text-[11px] font-medium text-zinc-400">
+                  Nombre
+                </label>
+                <span id="macroNameCounter" class="text-[11px] font-mono text-zinc-500">12 / 16</span>
+              </div>
+              <input
+                id="macroNameInput"
+                type="text"
+                maxlength="16"
+                value="ForeverMacro"
+                oninput="updateMacroMeta()"
+                placeholder="Máx 16..."
+                class="w-full bg-[#0d0f14] border border-[#262a36] focus:border-zinc-500 rounded px-2.5 py-1 text-xs font-medium text-zinc-100 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <!-- Classic Icon Picker Grid -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span id="uiIconLabel" class="text-[11px] text-zinc-500">Icono:</span>
+              <span id="selectedIconName" class="text-[10px] font-mono text-zinc-500">INV_Misc_QuestionMark</span>
+            </div>
+            <div id="iconPickerGrid" class="grid grid-cols-8 gap-1">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- REAL-TIME MACRO CODE EDITOR / VIEWER + 255 CHAR PROGRESS BAR -->
+        <div class="bg-[#14171f] border border-[#222631] rounded-md p-3 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <h3 id="uiCompiledTitle" class="text-[11px] font-semibold uppercase tracking-wider text-zinc-300">Texto Compilado</h3>
+            <button id="uiCopyBtn" onclick="copyMacroToClipboard()" class="px-2.5 py-1 rounded bg-zinc-200 hover:bg-white text-zinc-900 font-medium text-xs transition active:scale-95">
+              Copiar macro
+            </button>
+          </div>
+
+          <!-- Code Output Box -->
+          <textarea
+            id="macroOutputCode"
+            readonly
+            rows="5"
+            class="w-full bg-[#0a0c10] border border-[#222631] rounded p-2.5 font-mono text-xs text-zinc-200 leading-relaxed focus:outline-none resize-none selection:bg-zinc-700 selection:text-white"
+            placeholder="#showtooltip..."
+          ></textarea>
+
+          <!-- Character Counter Progress Bar (0 / 255) -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-[11px]">
+              <span id="uiLimitLabel" class="text-zinc-500">Límite del cliente</span>
+              <span id="charCountLabel" class="font-mono font-medium text-zinc-300">0 / 255</span>
+            </div>
+            <div class="w-full h-1.5 bg-[#0a0c10] rounded-full overflow-hidden">
+              <div id="charProgressBar" class="h-full bg-zinc-400 transition-all duration-200" style="width: 0%"></div>
+            </div>
+            <p id="charLimitWarning" class="hidden text-[11px] text-rose-400 font-medium pt-0.5">
+              Supera el límite estricto de 255 caracteres.
+            </p>
+          </div>
+        </div>
+
+        <!-- FULL NATURAL LANGUAGE SUMMARY -->
+        <div class="bg-[#14171f] border border-[#222631] rounded-md p-3 space-y-1.5">
+          <div class="flex items-center justify-between">
+            <h3 id="uiSummaryTitle" class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+              Explicación de ejecución
+            </h3>
+            <span id="scopeBadgeLabel" class="text-[10px] text-zinc-500">
+              Macros Generales
+            </span>
+          </div>
+          <div id="globalNaturalSummary" class="text-xs text-zinc-400 space-y-1 leading-relaxed">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- WOW: FOREVER QUICK TEMPLATES LIBRARY (FILTERABLE BY CLASS, RACE & MISC) -->
+        <div class="bg-[#14171f] border border-[#222631] rounded-md p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <h3 id="uiTemplatesTitle" class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+              Plantillas WoW: Forever
+            </h3>
+            <span id="templatesCountBadge" class="text-[10px] font-mono text-zinc-500"></span>
+          </div>
+
+          <div id="templatesListContainer" class="grid grid-cols-1 gap-1.5">
+            <!-- Rendered dynamically by renderTemplates() -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- SPELL SUGGESTIONS DATALIST FOR CLASSIC+ / FOREVER -->
+  <datalist id="foreverSpellsList"></datalist>
+  <datalist id="foreverItemsList"></datalist>
+
+  <!-- HELP MODAL -->
+  <div id="helpModal" class="fixed inset-0 bg-black/75 z-50 hidden items-center justify-center p-4">
+    <div class="panel-surface max-w-xl w-full rounded-lg overflow-hidden shadow-2xl">
+      <div class="panel-header px-5 py-3 flex items-center justify-between">
+        <h3 id="uiModalTitle" class="text-sm font-semibold text-zinc-100">Reglas del Motor — WoW: Forever</h3>
+        <button onclick="closeHelpModal()" class="text-zinc-500 hover:text-zinc-200 text-sm">✕</button>
+      </div>
+      <div id="uiModalBody" class="p-5 space-y-3 text-xs text-zinc-300 max-h-[80vh] overflow-y-auto leading-relaxed">
+        <!-- Populated dynamically by uiLang -->
+      </div>
+      <div class="bg-[#0d0f14] px-5 py-2.5 flex justify-end border-t border-[#1f222b]">
+        <button id="uiModalCloseBtn" onclick="closeHelpModal()" class="px-3.5 py-1 rounded bg-zinc-200 hover:bg-white text-zinc-900 font-medium text-xs">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- APPLICATION JAVASCRIPT                                                    -->
+  <!-- ========================================================================= -->
+  <script>
+    let uiLang = 'es';     // Idioma de toda la interfaz web ('es' | 'en')
+    let clientLang = 'es'; // Idioma de compilación del cliente WoW ('es' | 'en')
+    let macroScope = 'general';
+    let selectedIcon = { id: 'question', emoji: '?', name: 'INV_Misc_QuestionMark' };
+    let selectedPaletteCond = null;
+    let showAllExplanations = true;
+    let activePaletteFilter = 'all';
+
+    // Active Global Filters (Class, Race/Racials, Misc/Utility)
+    let activeClassFilter = 'all';
+    let activeRaceFilter = 'all';
+    let activeMiscFilter = 'all';
+
+    // Classes Catalog
+    const WOW_CLASSES = [
+      { id: 'all', es: 'Todas las Clases', en: 'All Classes' },
+      { id: 'warrior', es: 'Guerrero', en: 'Warrior' },
+      { id: 'paladin', es: 'Paladín', en: 'Paladin' },
+      { id: 'hunter', es: 'Cazador', en: 'Hunter' },
+      { id: 'rogue', es: 'Pícaro', en: 'Rogue' },
+      { id: 'priest', es: 'Sacerdote', en: 'Priest' },
+      { id: 'shaman', es: 'Chamán', en: 'Shaman' },
+      { id: 'mage', es: 'Mago', en: 'Mage' },
+      { id: 'warlock', es: 'Brujo', en: 'Warlock' },
+      { id: 'druid', es: 'Druida', en: 'Druid' }
+    ];
+
+    // Races & Racials Catalog (incluye la nueva raza Skyborne de WoW: Forever)
+    const WOW_RACES = [
+      { id: 'all', es: 'Todas las Razas', en: 'All Races' },
+      { id: 'human', es: 'Humano (Voluntad de sobrevivir)', en: 'Human (Will to Survive)', racialEs: 'Voluntad de sobrevivir', racialEn: 'Will to Survive', descEs: 'Racial: Elimina aturdimientos / Detección de sigilo', descEn: 'Racial: Removes stun effects / Stealth detection' },
+      { id: 'dwarf', es: 'Enano (Forma de piedra)', en: 'Dwarf (Stoneform)', racialEs: 'Forma de piedra', racialEn: 'Stoneform', descEs: 'Racial: Limpia sangrado, veneno y enfermedad (+10% armadura)', descEn: 'Racial: Removes bleed, poison, and disease (+10% armor)' },
+      { id: 'nightelf', es: 'Elfo de la noche (Fusión / Luz de Elune)', en: 'Night Elf (Shadowmeld / Elune\'s Light)', racialEs: 'Fusión de las sombras', racialEn: 'Shadowmeld', descEs: 'Racial: Sigilo en combate y +10% crítico con Luz de Elune', descEn: 'Racial: Combat stealth and +10% crit with Elune\'s Light' },
+      { id: 'gnome', es: 'Gnomo (Artista del escape / ¡Eureka!)', en: 'Gnome (Escape Artist / Eureka!)', racialEs: 'Artista del escape', racialEn: 'Escape Artist', descEs: 'Racial: Libra de frenados y ¡Eureka! (+10% daño / -10% coste)', descEn: 'Racial: Escapes roots and Eureka! (+10% damage / -10% cost)' },
+      { id: 'orc', es: 'Orco (Furia sangrienta)', en: 'Orc (Blood Fury)', racialEs: 'Furia sangrienta', racialEn: 'Blood Fury', descEs: 'Racial: Aumenta poder de ataque y daño con hechizos un 10%', descEn: 'Racial: Increases attack power and spell power by 10%' },
+      { id: 'undead', es: 'No-muerto (Voluntad / Canibalismo)', en: 'Undead (Will of the Forsaken)', racialEs: 'Voluntad de los Renegados', racialEn: 'Will of the Forsaken', racial2Es: 'Canibalismo', racial2En: 'Cannibalize', descEs: 'Racial: Inmunidad a miedo, sueño y embelesamiento', descEn: 'Racial: Removes fear, sleep, and charm' },
+      { id: 'tauren', es: 'Tauren (Pisotón de guerra)', en: 'Tauren (War Stomp)', racialEs: 'Pisotón de guerra', racialEn: 'War Stomp', descEs: 'Racial: Aturde hasta 5 enemigos cercanos durante 2 s', descEn: 'Racial: Stuns up to 5 nearby enemies for 2s' },
+      { id: 'troll', es: 'Trol (Rabiar)', en: 'Troll (Berserking)', racialEs: 'Rabiar', racialEn: 'Berserking', descEs: 'Racial: Aumenta velocidad de lanzamiento y ataque un 10%', descEn: 'Racial: Increases casting and attack speed by 10%' },
+      { id: 'skyborne', es: 'Cielonato (Caminar sobre el aire)', en: 'Skyborne (Walk on Air)', racialEs: 'Caminar sobre el aire', racialEn: 'Walk on Air', descEs: 'Racial Forever: Caminar sobre el aire, Leer línea Ley y Visión cielonata', descEn: 'Forever Racial: Walk on Air, Read Leyline & Skysight' }
+    ];
+
+    // Miscellaneous / Utility Filter Catalog
+    const WOW_MISC_CATEGORIES = [
+      { id: 'all', es: 'Todos (Variados)', en: 'All (Misc / Utility)' },
+      { id: 'trinkets', es: 'Abalorios (Trinkets 13 y 14)', en: 'Trinkets (Slots 13 & 14)' },
+      { id: 'consumables', es: 'Pociones, Piedras y Consumibles', en: 'Potions, Healthstones & Consumables' },
+      { id: 'engineering', es: 'Ingeniería y Granadas (@cursor)', en: 'Engineering & Grenades (@cursor)' },
+      { id: 'weaponswap', es: 'Cambio de Armas (Slots 16 y 17)', en: 'Weapon Swap (Slots 16 & 17)' },
+      { id: 'petmount', es: 'Mascotas y Monturas', en: 'Pets & Mounts' },
+      { id: 'targeting', es: 'Objetivos, Foco y Asistir', en: 'Targeting, Focus & Assist' }
+    ];
+
+    // Full Web UI Translations Dictionary
+    const UI_STRINGS = {
+      es: {
+        subtitle: 'Constructor visual de macros Classic+',
+        webLangLabel: 'Web:',
+        clientLabel: 'Cliente:',
+        rulesBtn: 'Reglas',
+        filterBarLabel: 'Filtrar por:',
+        classFilterLabel: 'Clase:',
+        raceFilterLabel: 'Raza:',
+        miscFilterLabel: 'Variados:',
+        resetFiltersBtn: 'Limpiar filtros ✕',
+        showingAllStatus: 'Mostrando todos los bloques y plantillas',
+        showingFilteredStatus: 'Filtro activo:',
+        paletteTitle: 'Bloques',
+        paletteHint: 'Arrastra o haz clic',
+        tabAll: 'Todos',
+        tabCond: 'Condición',
+        tabCombat: 'Acciones',
+        catHeaders: 'Cabeceras',
+        catCond: 'Condicionales',
+        catCondSub: 'Encajables',
+        catCondDesc: 'Arrastra o haz clic para insertar en <span class="text-orange-300 font-mono">[+ Condición]</span>.',
+        catCombat: 'Combate y Hechizos',
+        catPet: 'Ataque y Mascotas',
+        catEquip: 'Equipamiento',
+        catTarget: 'Objetivos',
+        canvasTitle: 'Lienzo de Ensamblaje',
+        lineSingular: 'línea',
+        linePlural: 'líneas',
+        explainBtn: 'Explicaciones',
+        clearBtn: 'Limpiar',
+        legendAnd: '<span class="font-mono text-zinc-300">[a,b]</span> = lógica Y (AND)',
+        legendOr: '<span class="font-mono text-zinc-300">[a][b]</span> = lógica O (usa <span class="text-zinc-300">+ OR</span> para respaldo)',
+        cancelBtn: 'Cancelar',
+        footerNote: 'Rango Máx Automático omite <code class="text-zinc-300">(Rango X)</code> para escalar con el instructor.',
+        copiedToast: 'Macro copiada al portapapeles',
+        outputTitle: 'Salida y Plantillas',
+        scopeGeneral: 'Macros Generales',
+        scopeChar: 'Macros de Personaje',
+        macroNameLabel: 'Nombre',
+        iconLabel: 'Icono:',
+        compiledTitle: 'Texto Compilado',
+        copyBtn: 'Copiar macro',
+        limitLabel: 'Límite del cliente',
+        limitWarning: 'Supera el límite estricto de 255 caracteres.',
+        summaryTitle: 'Explicación de ejecución',
+        emptySummary: 'Sin bloques activos.',
+        templatesTitle: 'Plantillas WoW: Forever',
+        loadWord: 'Cargar',
+        emptyCanvasTitle: 'Lienzo vacío',
+        emptyCanvasSub: 'Arrastra bloques desde el panel izquierdo o selecciona una plantilla rápida.',
+        emptyBtnHealer: 'Sanador @mouseover',
+        emptyBtnWarrior: 'Espada y Escudo',
+        addCondSlot: '+ Condición',
+        rankBadge: 'Rango',
+        autoMaxRank: 'Rango Máx Auto',
+        rankWord: 'Rango',
+        slot13: 'Ranura 13 (Abalorio Sup.)',
+        slot14: 'Ranura 14 (Abalorio Inf.)',
+        itemNameOpt: 'Nombre de Objeto',
+        modalTitle: 'Reglas del Motor — WoW: Forever',
+        modalClose: 'Cerrar',
+        modalBody: `
+          <div class="p-3 rounded bg-[#161922] border border-[#252934]">
+            <h4 class="font-semibold text-zinc-100 mb-1">1. Gestión de Rangos de Hechizos</h4>
+            <p class="text-zinc-400">
+              En <strong>Rango Máx Automático</strong> se escribe solo el nombre del hechizo (<code class="text-zinc-200">/cast Descarga de escarcha</code>) para que escale al aprender rangos nuevos. Si seleccionas un rango concreto (downranking), se compila como <code class="text-zinc-200">/cast Hechizo(Rango X)</code> o <code class="text-zinc-200">(Rank X)</code>.
+            </p>
+          </div>
+          <div class="p-3 rounded bg-[#161922] border border-[#252934]">
+            <h4 class="font-semibold text-zinc-100 mb-1">2. Condicionales: Lógica AND (,) y Lógica OR ([][])</h4>
+            <p class="text-zinc-400">
+              Condiciones en el mismo corchete se separan por comas (<code class="text-zinc-200">[@mouseover,help,nodead]</code>). Añade otro bloque con <strong>+ OR</strong> para crear corchetes contiguos (<code class="text-zinc-200">[@mouseover,help][@player]</code>).
+            </p>
+          </div>
+          <div class="p-3 rounded bg-[#161922] border border-[#252934]">
+            <h4 class="font-semibold text-zinc-100 mb-1">3. Cambio de Equipo (/equipslot 16 y 17)</h4>
+            <p class="text-zinc-400">
+              La ranura <strong>16</strong> corresponde a la mano derecha y la <strong>17</strong> a la mano izquierda o escudo.
+            </p>
+          </div>
+          <div class="p-3 rounded bg-[#161922] border border-[#252934]">
+            <h4 class="font-semibold text-zinc-100 mb-1">4. Límites del Cliente</h4>
+            <p class="text-zinc-400">
+              Nombre limitado a <strong>16 caracteres</strong> y cuerpo limitado a <strong>255 caracteres</strong>.
+            </p>
+          </div>
+        `
+      },
+      en: {
+        subtitle: 'Classic+ Visual Macro Compiler',
+        webLangLabel: 'Web:',
+        clientLabel: 'Client:',
+        rulesBtn: 'Rules',
+        filterBarLabel: 'Filter by:',
+        classFilterLabel: 'Class:',
+        raceFilterLabel: 'Race:',
+        miscFilterLabel: 'Misc / Utility:',
+        resetFiltersBtn: 'Reset filters ✕',
+        showingAllStatus: 'Showing all blocks and templates',
+        showingFilteredStatus: 'Active filter:',
+        paletteTitle: 'Blocks',
+        paletteHint: 'Drag or click',
+        tabAll: 'All',
+        tabCond: 'Condition',
+        tabCombat: 'Actions',
+        catHeaders: 'Headers',
+        catCond: 'Conditionals',
+        catCondSub: 'Snap-in',
+        catCondDesc: 'Drag or click to insert into <span class="text-orange-300 font-mono">[+ Condition]</span>.',
+        catCombat: 'Combat & Spells',
+        catPet: 'Attack & Pets',
+        catEquip: 'Equipment',
+        catTarget: 'Targeting',
+        canvasTitle: 'Assembly Canvas',
+        lineSingular: 'line',
+        linePlural: 'lines',
+        explainBtn: 'Explanations',
+        clearBtn: 'Clear',
+        legendAnd: '<span class="font-mono text-zinc-300">[a,b]</span> = AND logic (comma)',
+        legendOr: '<span class="font-mono text-zinc-300">[a][b]</span> = OR logic (use <span class="text-zinc-300">+ OR</span> for fallback)',
+        cancelBtn: 'Cancel',
+        footerNote: 'Auto Max Rank omits <code class="text-zinc-300">(Rank X)</code> so spells scale automatically.',
+        copiedToast: 'Macro copied to clipboard',
+        outputTitle: 'Output & Templates',
+        scopeGeneral: 'General Macros',
+        scopeChar: 'Character Macros',
+        macroNameLabel: 'Name',
+        iconLabel: 'Icon:',
+        compiledTitle: 'Compiled Output',
+        copyBtn: 'Copy macro',
+        limitLabel: 'Client limit',
+        limitWarning: 'Exceeds the strict 255-character client limit.',
+        summaryTitle: 'Execution Summary',
+        emptySummary: 'No active blocks.',
+        templatesTitle: 'WoW: Forever Templates',
+        loadWord: 'Load',
+        emptyCanvasTitle: 'Canvas is empty',
+        emptyCanvasSub: 'Drag blocks from the left palette or load a quick template.',
+        emptyBtnHealer: 'Healer @mouseover',
+        emptyBtnWarrior: 'Sword & Shield',
+        addCondSlot: '+ Condition',
+        rankBadge: 'Rank',
+        autoMaxRank: 'Auto Max Rank',
+        rankWord: 'Rank',
+        slot13: 'Slot 13 (Top Trinket)',
+        slot14: 'Slot 14 (Bottom Trinket)',
+        itemNameOpt: 'Item Name',
+        modalTitle: 'Engine Rules — WoW: Forever',
+        modalClose: 'Close',
+        modalBody: `
+          <div class="p-3 rounded bg-[#161922] border border-[#252934]">
+            <h4 class="font-semibold text-zinc-100 mb-1">1. Spell Ranks & Downranking</h4>
+            <p class="text-zinc-400">
+              When set to <strong>Auto Max Rank</strong>, only the spell name is written (<code class="text-zinc-200">/cast Frostbolt</code>) so it scales automatically when learning new ranks at your trainer. Choosing a specific rank compiles as <code class="text-zinc-200">/cast Spell(Rank X)</code>.
+            </p>
+          </div>
+          <div class="p-3 rounded bg-[#161922] border border-[#252934]">
+            <h4 class="font-semibold text-zinc-100 mb-1">2. Conditionals: AND (,) vs OR ([][])</h4>
+            <p class="text-zinc-400">
+              Conditions inside the same bracket are separated by commas (<code class="text-zinc-200">[@mouseover,help,nodead]</code>). Click <strong>+ OR</strong> to add a fallback bracket (<code class="text-zinc-200">[@mouseover,help][@player]</code>).
+            </p>
+          </div>
+          <div class="p-3 rounded bg-[#161922] border border-[#252934]">
+            <h4 class="font-semibold text-zinc-100 mb-1">3. Equipment Swap (/equipslot 16 & 17)</h4>
+            <p class="text-zinc-400">
+              Slot <strong>16</strong> is your Main-Hand weapon and slot <strong>17</strong> is your Off-Hand or Shield.
+            </p>
+          </div>
+          <div class="p-3 rounded bg-[#161922] border border-[#252934]">
+            <h4 class="font-semibold text-zinc-100 mb-1">4. Strict Client Limits</h4>
+            <p class="text-zinc-400">
+              Macro names are limited to <strong>16 characters</strong> and the macro body is strictly limited to <strong>255 characters</strong>.
+            </p>
+          </div>
+        `
+      }
+    };
+
+    const WOW_ICONS = [
+      { id: 'question', emoji: '?', name: 'INV_Misc_QuestionMark' },
+      { id: 'frostbolt', emoji: '❄', name: 'Spell_Frost_FrostBolt02' },
+      { id: 'fireball', emoji: '🔥', name: 'Spell_Fire_FlameBolt' },
+      { id: 'heal', emoji: '✚', name: 'Spell_Holy_FlashHeal' },
+      { id: 'shield', emoji: '🛡', name: 'INV_Shield_06' },
+      { id: 'sword', emoji: '⚔', name: 'INV_Sword_04' },
+      { id: 'bow', emoji: '🏹', name: 'INV_Weapon_Bow_07' },
+      { id: 'skull', emoji: '☠', name: 'Spell_Shadow_ShadowBolt' },
+      { id: 'paw', emoji: '🐾', name: 'Ability_Hunter_Pet_Wolf' },
+      { id: 'sheep', emoji: '🐑', name: 'Spell_Nature_Polymorph' },
+      { id: 'trinket', emoji: '◈', name: 'INV_Jewelry_Talisman_08' },
+      { id: 'totem', emoji: '♊', name: 'Spell_Nature_EarthBindTotem' },
+      { id: 'stealth', emoji: '🗡', name: 'Ability_Stealth' },
+      { id: 'wings', emoji: '✦', name: 'Spell_Holy_SealOfWrath' },
+      { id: 'nature', emoji: '❀', name: 'Spell_Nature_Rejuvenation' },
+      { id: 'arcane', emoji: '✧', name: 'Spell_Arcane_Blink' }
+    ];
+
+    // Spells Dictionary tagged by Class or Race
+    let SPELL_DICTIONARY = [
+      // Mage
+      { es: 'Descarga de escarcha', en: 'Frostbolt', classes: ['mage'] },
+      { es: 'Explosión de escarcha', en: 'Frost Blast', classes: ['mage'] },
+      { es: 'Polimorfia', en: 'Polymorph', classes: ['mage'] },
+      { es: 'Bola de fuego', en: 'Fireball', classes: ['mage'] },
+      { es: 'Contrahechizo', en: 'Counterspell', classes: ['mage'] },
+      { es: 'Bloqueo de hielo', en: 'Ice Block', classes: ['mage'] },
+      // Priest
+      { es: 'Sanación relámpago', en: 'Flash Heal', classes: ['priest'] },
+      { es: 'Sanación superior', en: 'Greater Heal', classes: ['priest'] },
+      { es: 'Renovar', en: 'Renew', classes: ['priest'] },
+      { es: 'Palabra de poder: escudo', en: 'Power Word: Shield', classes: ['priest'] },
+      { es: 'Disipar magia', en: 'Dispel Magic', classes: ['priest', 'paladin'] },
+      // Shaman
+      { es: 'Ola de sanación', en: 'Healing Wave', classes: ['shaman'] },
+      { es: 'Ola de sanación inferior', en: 'Lesser Healing Wave', classes: ['shaman'] },
+      { es: 'Choque de tierra', en: 'Earth Shock', classes: ['shaman'] },
+      { es: 'Purgar', en: 'Purge', classes: ['shaman'] },
+      // Druid
+      { es: 'Toque de sanación', en: 'Healing Touch', classes: ['druid'] },
+      { es: 'Rejuvenecimiento', en: 'Rejuvenation', classes: ['druid'] },
+      { es: 'Fuego feérico', en: 'Faerie Fire', classes: ['druid'] },
+      { es: 'Forma de oso Temible', en: 'Dire Bear Form', classes: ['druid'] },
+      // Paladin
+      { es: 'Destello de Luz', en: 'Flash of Light', classes: ['paladin'] },
+      { es: 'Luz Sagrada', en: 'Holy Light', classes: ['paladin'] },
+      { es: 'Escudo divino', en: 'Divine Shield', classes: ['paladin'] },
+      { es: 'Bendición de protección', en: 'Blessing of Protection', classes: ['paladin'] },
+      // Hunter
+      { es: 'Marca del cazador', en: "Hunter's Mark", classes: ['hunter'] },
+      { es: 'Picadura de serpiente', en: 'Serpent Sting', classes: ['hunter'] },
+      { es: 'Disparo arcano', en: 'Arcane Shot', classes: ['hunter'] },
+      { es: 'Fingir muerte', en: 'Feign Death', classes: ['hunter'] },
+      // Warlock
+      { es: 'Descarga de las Sombras', en: 'Shadow Bolt', classes: ['warlock'] },
+      { es: 'Corrupción', en: 'Corruption', classes: ['warlock'] },
+      { es: 'Maldición de agonía', en: 'Curse of Agony', classes: ['warlock'] },
+      { es: 'Miedo', en: 'Fear', classes: ['warlock'] },
+      // Warrior
+      { es: 'Cargar', en: 'Charge', classes: ['warrior'] },
+      { es: 'Embiste con escudo', en: 'Shield Bash', classes: ['warrior'] },
+      { es: 'Muro de escudo', en: 'Shield Wall', classes: ['warrior'] },
+      { es: 'Actitud defensiva', en: 'Defensive Stance', classes: ['warrior'] },
+      { es: 'Golpe mortal', en: 'Mortal Strike', classes: ['warrior'] },
+      // Rogue
+      { es: 'Golpe siniestro', en: 'Sinister Strike', classes: ['rogue'] },
+      { es: 'Patada', en: 'Kick', classes: ['rogue'] },
+      { es: 'Esfumarse', en: 'Vanish', classes: ['rogue'] },
+      { es: 'Ceguera', en: 'Blind', classes: ['rogue'] },
+      { es: 'Sigilo', en: 'Stealth', classes: ['rogue'] },
+      // Racials
+      { es: 'Furia sangrienta', en: 'Blood Fury', races: ['orc'] },
+      { es: 'Voluntad de los Renegados', en: 'Will of the Forsaken', races: ['undead'] },
+      { es: 'Canibalismo', en: 'Cannibalize', races: ['undead'] },
+      { es: 'Forma de piedra', en: 'Stoneform', races: ['dwarf'] },
+      { es: 'Rabiar', en: 'Berserking', races: ['troll'] },
+      { es: 'Pisotón de guerra', en: 'War Stomp', races: ['tauren'] },
+      { es: 'Fusión de las sombras', en: 'Shadowmeld', races: ['nightelf'] },
+      { es: 'Artista del escape', en: 'Escape Artist', races: ['gnome'] },
+      { es: 'Percepción', en: 'Perception', races: ['human'] }
+    ];
+
+    let ITEM_DICTIONARY = [
+      { es: 'Defensora de Ventormenta', en: 'Stormwind Defender', misc: ['weaponswap'] },
+      { es: 'Espada bastarda de valor', en: 'Valor Bastard Sword', misc: ['weaponswap'] },
+      { es: 'Égida del Comandante', en: "Commander's Aegis", misc: ['weaponswap'] },
+      { es: 'Poción de sanación mayor', en: 'Major Healing Potion', misc: ['consumables'] },
+      { es: 'Poción de maná mayor', en: 'Major Mana Potion', misc: ['consumables'] },
+      { es: 'Piedra de salud demoníaca', en: 'Demonic Healthstone', misc: ['consumables'] },
+      { es: 'Granada de hierro', en: 'Iron Grenade', misc: ['engineering'] },
+      { es: 'bomba de torio', en: 'Thorium Grenade', misc: ['engineering'] },
+      { es: 'Carga de zapador goblin', en: 'Goblin Sapper Charge', misc: ['engineering'] },
+      { es: 'Venda de paño rúnico grueso', en: 'Heavy Runecloth Bandage', misc: ['consumables'] }
+    ];
+
+    // -------------------------------------------------------------------------
+    // INTEGRACIÓN CON LA BASE DE DATOS DE WOWHEAD (WoW: Forever)
+    // data/wowhead-forever-db.js se genera con tools/fetch-wowhead.ps1 a partir de
+    // https://www.wowhead.com/forever (nombres oficiales EN / ES). Si existe,
+    // sustituye a los diccionarios de respaldo definidos arriba.
+    // -------------------------------------------------------------------------
+    const WH_DB = window.WOWHEAD_FOREVER_DB || null;
+    // Nombres de ejemplo antiguos -> ID real de Wowhead
+    const WH_ITEM_ALIASES = {
+      'valor bastard sword': 19019,
+      'espada bastarda de valor': 19019,
+      'stormwind defender': 1203,
+      'defensora de ventormenta': 1203,
+      "commander's aegis": 18168,
+      'demonic healthstone': 9421,
+      'piedra de salud demoníaca': 9421,
+      'bastón de jordan': 12784
+    };
+
+    if (WH_DB) {
+      const spellMap = new Map();
+      Object.entries(WH_DB.classes || {}).forEach(([cls, list]) => (list || []).forEach(s => {
+        const e = spellMap.get(s.id) || { id: s.id, es: s.es, en: s.en, icon: s.icon, classes: [], races: [] };
+        e.classes.push(cls);
+        spellMap.set(s.id, e);
+      }));
+      Object.entries(WH_DB.races || {}).forEach(([race, list]) => (list || []).forEach(s => {
+        const e = spellMap.get(s.id) || { id: s.id, es: s.es, en: s.en, icon: s.icon, classes: [], races: [] };
+        e.races.push(race);
+        spellMap.set(s.id, e);
+      }));
+      if (spellMap.size > 0) SPELL_DICTIONARY = [...spellMap.values()];
+
+      const items = [];
+      Object.entries(WH_DB.items || {}).forEach(([cat, list]) => (list || []).forEach(i => {
+        items.push({ id: i.id, es: i.es, en: i.en, icon: i.icon, misc: [cat] });
+      }));
+      if (items.length > 0) ITEM_DICTIONARY = items;
+
+      // Nombres oficiales de las raciales en el filtro de razas
+      WOW_RACES.forEach(r => {
+        const list = (WH_DB.races || {})[r.id];
+        if (!list || !list.length) return;
+        r.racialEs = list[0].es;
+        r.racialEn = list[0].en;
+        if (list[1]) { r.racial2Es = list[1].es; r.racial2En = list[1].en; }
+        r.es = `${r.es.split(' (')[0]} (${list[0].es})`;
+        r.en = `${r.en.split(' (')[0]} (${list[0].en})`;
+      });
+    }
+
+    // Busca un nombre (en cualquier idioma) en la base de datos y devuelve { id, es, en, icon, kind }
+    function whLookup(name) {
+      const key = String(name || '').trim().toLowerCase();
+      if (!key) return null;
+      const match = (d) => d.es.toLowerCase() === key || d.en.toLowerCase() === key;
+      const spellHit = SPELL_DICTIONARY.find(match);
+      if (spellHit) {
+        return { id: spellHit.id, es: spellHit.es, en: spellHit.en, icon: spellHit.icon || 'inv_misc_questionmark', kind: 'spell' };
+      }
+      let itemHit = ITEM_DICTIONARY.find(match);
+      if (!itemHit && WH_ITEM_ALIASES[key]) {
+        itemHit = ITEM_DICTIONARY.find(i => i.id === WH_ITEM_ALIASES[key]);
+      }
+      if (itemHit) {
+        return { id: itemHit.id, es: itemHit.es, en: itemHit.en, icon: itemHit.icon || 'inv_misc_questionmark', kind: 'item' };
+      }
+      return null;
+    }
+
+    // Devuelve la entrada de Wowhead asociada a un bloque del lienzo
+    function resolveBlockWhEntry(blk) {
+      if (!blk) return null;
+      if (blk.type === 'cast') {
+        return whLookup(blk.spellEs) || whLookup(blk.spellEn);
+      }
+      if (blk.type === 'castsequence') {
+        const first = String(blk.seqEs || blk.seqEn || '').split(',')[0];
+        return whLookup(first);
+      }
+      if (blk.type === 'use') {
+        if (blk.useMode === 'item') return whLookup(blk.itemEs) || whLookup(blk.itemEn);
+        return null;
+      }
+      if (blk.type === 'equip' || blk.type === 'equipslot16' || blk.type === 'equipslot17' || blk.type === 'cancelaura' || blk.type === 'showtooltip' || blk.type === 'show') {
+        return whLookup(blk.paramEs) || whLookup(blk.paramEn);
+      }
+      return null;
+    }
+
+    // -------------------------------------------------------------------------
+    // MOTOR DE TOOLTIPS OFICIALES DE WOWHEAD (WoW: Forever)
+    // -------------------------------------------------------------------------
+    const whTooltipCache = new Map();
+    let whActiveTooltipKey = null;
+
+    async function showWhTooltip(event, kind, id) {
+      const numId = parseInt(id, 10);
+      if (!kind || !numId) return;
+      const locale = uiLang === 'es' ? 6 : 0;
+      const cacheKey = `${kind}:${numId}:${locale}`;
+      whActiveTooltipKey = cacheKey;
+
+      const tipEl = document.getElementById('whFloatingTooltip');
+      if (!tipEl) return;
+
+      moveWhTooltip(event);
+
+      if (whTooltipCache.has(cacheKey)) {
+        renderWhTooltipContent(tipEl, whTooltipCache.get(cacheKey));
+        return;
+      }
+
+      tipEl.innerHTML = `<div class="text-zinc-400 text-[11px] font-mono">Wowhead Forever #${numId}...</div>`;
+      tipEl.classList.remove('hidden');
+
+      try {
+        const res = await fetch(`https://nether.wowhead.com/forever/tooltip/${kind}/${numId}?locale=${locale}`);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        whTooltipCache.set(cacheKey, data);
+        if (whActiveTooltipKey === cacheKey) {
+          renderWhTooltipContent(tipEl, data);
+        }
+      } catch (err) {
+        if (whActiveTooltipKey === cacheKey) {
+          tipEl.classList.add('hidden');
+        }
+      }
+    }
+
+    function renderWhTooltipContent(tipEl, data) {
+      if (!data || !data.tooltip) {
+        tipEl.classList.add('hidden');
+        return;
+      }
+      const iconName = (data.icon || 'inv_misc_questionmark').toLowerCase();
+      tipEl.innerHTML = `
+        <div class="flex items-start gap-2.5">
+          <img src="https://wow.zamimg.com/images/wow/icons/medium/${encodeURIComponent(iconName)}.jpg" alt="" class="w-9 h-9 rounded border border-[#6b5a35] shrink-0 mt-0.5" />
+          <div class="flex-1 min-w-0">${data.tooltip}</div>
+        </div>
+      `;
+      tipEl.classList.remove('hidden');
+    }
+
+    function showBlockWhTooltip(event, blockId) {
+      const blk = canvasBlocks.find(b => b.id === blockId);
+      const entry = resolveBlockWhEntry(blk);
+      if (entry && entry.id) {
+        showWhTooltip(event, entry.kind, entry.id);
+      }
+    }
+
+    function showMacroPreviewTooltip(event) {
+      for (const blk of canvasBlocks) {
+        const entry = resolveBlockWhEntry(blk);
+        if (entry && entry.id) {
+          showWhTooltip(event, entry.kind, entry.id);
+          return;
+        }
+      }
+    }
+
+    function moveWhTooltip(event) {
+      const tipEl = document.getElementById('whFloatingTooltip');
+      if (!tipEl || tipEl.classList.contains('hidden')) return;
+      const offset = 16;
+      let left = event.clientX + offset;
+      let top = event.clientY + offset;
+      const rect = tipEl.getBoundingClientRect();
+      if (left + rect.width > window.innerWidth - 12) {
+        left = Math.max(12, event.clientX - rect.width - offset);
+      }
+      if (top + rect.height > window.innerHeight - 12) {
+        top = Math.max(12, event.clientY - rect.height - offset);
+      }
+      tipEl.style.left = `${left}px`;
+      tipEl.style.top = `${top}px`;
+    }
+
+    function hideWhTooltip() {
+      whActiveTooltipKey = null;
+      const tipEl = document.getElementById('whFloatingTooltip');
+      if (tipEl) tipEl.classList.add('hidden');
+    }
+
+    // Normaliza los campos bilingües de un bloque (spell / item / param / seq) con los nombres oficiales
+    function whNormalizeBlock(blk) {
+      ['spell', 'item', 'param'].forEach(prefix => {
+        const hit = whLookup(blk[prefix + 'En']) || whLookup(blk[prefix + 'Es']);
+        if (hit) { blk[prefix + 'Es'] = hit.es; blk[prefix + 'En'] = hit.en; }
+      });
+      if (blk.seqEs || blk.seqEn) {
+        const partsEn = String(blk.seqEn || blk.seqEs).split(',').map(s => s.trim());
+        const partsEs = String(blk.seqEs || blk.seqEn).split(',').map(s => s.trim());
+        const pairs = partsEn.map((p, i) => whLookup(p) || whLookup(partsEs[i]) || { es: partsEs[i] || p, en: p });
+        blk.seqEs = pairs.map(p => p.es).join(', ');
+        blk.seqEn = pairs.map(p => p.en).join(', ');
+      }
+      return blk;
+    }
+
+    // Templates Catalog with Class, Race & Misc Metadata
+    const TEMPLATES_CATALOG = [
+      {
+        key: 'hunter_warlock',
+        borderClass: 'border-l-red-500',
+        titleColor: 'text-red-300',
+        classes: ['hunter', 'warlock'],
+        races: [],
+        misc: ['petmount'],
+        titleEs: 'Cazador / Brujo: Mascota + Rango Máx Auto',
+        titleEn: 'Hunter / Warlock: Pet Attack + Auto Max Rank',
+        descEs: 'Ordena atacar a la mascota y lanza el hechizo escalando automáticamente.',
+        descEn: 'Sends your pet to attack and casts your main spell with automatic rank scaling.'
+      },
+      {
+        key: 'warrior_paladin',
+        borderClass: 'border-l-emerald-500',
+        titleColor: 'text-emerald-300',
+        classes: ['warrior', 'paladin'],
+        races: [],
+        misc: ['weaponswap'],
+        titleEs: 'Guerrero / Paladín: Espada y Escudo (Slots 16 y 17)',
+        titleEn: 'Warrior / Paladin: Sword & Board (Slots 16 & 17)',
+        descEs: 'Equipa arma de 1 mano (ranura 16) y escudo (ranura 17) en un comando.',
+        descEn: 'Equips 1H weapon (slot 16) and shield (slot 17) in a single button press.'
+      },
+      {
+        key: 'healer_mouseover',
+        borderClass: 'border-l-blue-500',
+        titleColor: 'text-blue-300',
+        classes: ['priest', 'shaman', 'druid', 'paladin'],
+        races: [],
+        misc: [],
+        titleEs: 'Sanador: @mouseover + Respaldo @player + Rango 1',
+        titleEn: 'Healer: @mouseover + @player Fallback + Rank 1',
+        descEs: 'Curación <code class="text-zinc-400">[@mouseover,help,nodead][@player]</code> y Rango 1 con Shift.',
+        descEn: 'Heals <code class="text-zinc-400">[@mouseover,help,nodead][@player]</code> and downranks to Rank 1 with Shift.'
+      },
+      {
+        key: 'mage_focus',
+        borderClass: 'border-l-purple-500',
+        titleColor: 'text-purple-300',
+        classes: ['mage'],
+        races: [],
+        misc: ['targeting'],
+        titleEs: 'Mago: Explosión de escarcha / Polimorfia a @focus',
+        titleEn: 'Mage: Frost Blast / Polymorph on @focus',
+        descEs: 'Corta el lanzamiento actual y aplica control o daño inmediato al <code class="text-zinc-400">@focus</code>.',
+        descEn: 'Stops current casting and applies instant crowd control or burst to <code class="text-zinc-400">@focus</code>.'
+      },
+      {
+        key: 'racial_trinket_burst',
+        borderClass: 'border-l-teal-500',
+        titleColor: 'text-teal-300',
+        classes: ['warrior', 'rogue', 'mage', 'warlock', 'hunter', 'shaman'],
+        races: ['orc', 'troll'],
+        misc: ['trinkets'],
+        titleEs: 'Burst Racial + Abalorio 13 + Hechizo Máx Rango',
+        titleEn: 'Racial Burst + Top Trinket (13) + Max Rank Spell',
+        descEs: 'Activa tu racial ofensiva (Furia sangrienta / Rabiar) + Abalorio 13 + ataque principal.',
+        descEn: 'Activates your offensive racial (Blood Fury / Berserking) + Trinket 13 + main ability.'
+      },
+      {
+        key: 'racial_defensive_cleanse',
+        borderClass: 'border-l-teal-500',
+        titleColor: 'text-teal-300',
+        classes: [],
+        races: ['undead', 'dwarf', 'gnome', 'tauren', 'nightelf', 'human'],
+        misc: ['consumables'],
+        titleEs: 'Defensivo Racial + Poción / Piedra de Salud',
+        titleEn: 'Defensive Racial + Healing Potion / Healthstone',
+        descEs: 'Corta el lanzamiento, activa tu racial de supervivencia y usa consumible de emergencia.',
+        descEn: 'Stops casting, activates your defensive racial, and uses an emergency heal item.'
+      },
+      {
+        key: 'eng_grenade_cursor',
+        borderClass: 'border-l-amber-500',
+        titleColor: 'text-amber-300',
+        classes: [],
+        races: [],
+        misc: ['engineering', 'consumables'],
+        titleEs: 'Variados: Granada de Ingeniería [@cursor]',
+        titleEn: 'Misc: Engineering Grenade [@cursor]',
+        descEs: 'Detiene lanzamiento actual y lanza Granada de hierro directamente bajo el cursor.',
+        descEn: 'Stops current cast and throws an Iron Grenade directly at your mouse cursor.'
+      },
+      {
+        key: 'rogue_stealth_kick',
+        borderClass: 'border-l-yellow-500',
+        titleColor: 'text-yellow-300',
+        classes: ['rogue'],
+        races: [],
+        misc: ['targeting'],
+        titleEs: 'Pícaro: Patada [@mouseover] + Ataque Siniestro',
+        titleEn: 'Rogue: Kick [@mouseover] + Sinister Strike',
+        descEs: 'Interrumpe al enemigo bajo tu ratón con Shift o inicia auto-ataque + Golpe siniestro.',
+        descEn: 'Interrupts mouseover enemy with Shift or starts auto-attack + Sinister Strike.'
+      }
+    ];
+
+    const PALETTE_BLOCKS = [
+      {
+        type: 'showtooltip',
+        category: 'header',
+        colorClass: 'cat-header',
+        labelEs: '#showtooltip',
+        descEs: 'Muestra icono y descripción dinámica',
+        descEn: 'Shows dynamic icon and spell tooltip',
+        acceptsCond: true,
+        hasParam: true,
+        paramPlaceholderEs: 'Opcional: Hechizo o vacío',
+        paramPlaceholderEn: 'Optional: Spell or empty',
+        defaultParam: ''
+      },
+      {
+        type: 'show',
+        category: 'header',
+        colorClass: 'cat-header',
+        labelEs: '#show',
+        descEs: 'Muestra el icono en la barra de acción',
+        descEn: 'Shows dynamic icon on the action bar',
+        acceptsCond: false,
+        hasParam: true,
+        paramPlaceholderEs: 'Opcional: Hechizo o vacío',
+        paramPlaceholderEn: 'Optional: Spell or empty',
+        defaultParam: ''
+      },
+      {
+        type: 'cast',
+        category: 'combat',
+        colorClass: 'cat-combat',
+        labelEs: '/cast',
+        descEs: 'Lanza hechizo (Rango Máx o Rango 1..N)',
+        descEn: 'Casts a spell (Auto Max Rank or Rank 1..N)',
+        acceptsCond: true,
+        hasSpell: true,
+        hasRank: true,
+        defaultSpellEs: 'Descarga de escarcha',
+        defaultSpellEn: 'Frostbolt',
+        defaultRank: 'auto'
+      },
+      {
+        type: 'castsequence',
+        category: 'combat',
+        colorClass: 'cat-combat',
+        labelEs: '/castsequence',
+        descEs: 'Secuencia de hechizos con reinicio',
+        descEn: 'Spell sequence with reset condition',
+        acceptsCond: true,
+        hasReset: true,
+        defaultReset: '8',
+        defaultSeqEs: 'Corrupción, Maldición de agonía',
+        defaultSeqEn: 'Corruption, Curse of Agony'
+      },
+      {
+        type: 'use',
+        category: 'combat',
+        colorClass: 'cat-combat',
+        labelEs: '/use',
+        descEs: 'Usa objeto o ranura de abalorio (13 / 14)',
+        descEn: 'Uses an item or trinket slot (13 / 14)',
+        acceptsCond: true,
+        hasUseMode: true,
+        defaultUseMode: '13',
+        defaultItemEs: 'Poción de sanación mayor',
+        defaultItemEn: 'Major Healing Potion'
+      },
+      {
+        type: 'stopcasting',
+        category: 'combat',
+        colorClass: 'cat-combat',
+        labelEs: '/stopcasting',
+        descEs: 'Detiene el lanzamiento en curso',
+        descEn: 'Interrupts your current spell cast',
+        acceptsCond: false
+      },
+      {
+        type: 'cancelaura',
+        category: 'combat',
+        colorClass: 'cat-combat',
+        labelEs: '/cancelaura',
+        descEs: 'Cancela un beneficio activo',
+        descEn: 'Cancels an active buff aura',
+        acceptsCond: false,
+        hasParam: true,
+        paramPlaceholderEs: 'Aura (ej. Bloqueo de hielo)',
+        paramPlaceholderEn: 'Aura (e.g. Ice Block)',
+        defaultParam: 'Bloqueo de hielo',
+        defaultParamEn: 'Ice Block'
+      },
+      {
+        type: 'startattack',
+        category: 'pet',
+        colorClass: 'cat-pet',
+        labelEs: '/startattack',
+        descEs: 'Inicia el ataque automático',
+        descEn: 'Starts melee auto-attack',
+        acceptsCond: true
+      },
+      {
+        type: 'petattack',
+        category: 'pet',
+        colorClass: 'cat-pet',
+        labelEs: '/petattack',
+        descEs: 'Ordena atacar a la mascota',
+        descEn: 'Orders your pet to attack',
+        acceptsCond: true
+      },
+      {
+        type: 'petfollow',
+        category: 'pet',
+        colorClass: 'cat-pet',
+        labelEs: '/petfollow',
+        descEs: 'Ordena regresar a la mascota',
+        descEn: 'Orders your pet to follow you',
+        acceptsCond: true
+      },
+      {
+        type: 'petpassive',
+        category: 'pet',
+        colorClass: 'cat-pet',
+        labelEs: '/petpassive',
+        descEs: 'Mascota en actitud pasiva',
+        descEn: 'Sets your pet to passive stance',
+        acceptsCond: false
+      },
+      {
+        type: 'dismount',
+        category: 'pet',
+        colorClass: 'cat-pet',
+        labelEs: '/dismount',
+        descEs: 'Desmonta si vas en montura',
+        descEn: 'Dismounts you immediately',
+        acceptsCond: true
+      },
+      {
+        type: 'equip',
+        category: 'equip',
+        colorClass: 'cat-equip',
+        labelEs: '/equip',
+        descEs: 'Equipa un objeto por nombre',
+        descEn: 'Equips an item by name',
+        acceptsCond: true,
+        hasParam: true,
+        paramPlaceholderEs: 'Nombre del objeto',
+        paramPlaceholderEn: 'Item name',
+        defaultParam: 'Bastón de Jordan'
+      },
+      {
+        type: 'equipslot16',
+        category: 'equip',
+        colorClass: 'cat-equip',
+        labelEs: '/equipslot 16',
+        descEs: 'Mano Derecha (Ranura 16)',
+        descEn: 'Main-Hand Weapon (Slot 16)',
+        acceptsCond: true,
+        hasParam: true,
+        paramPlaceholderEs: 'Arma Mano Derecha',
+        paramPlaceholderEn: 'Main-Hand Weapon',
+        defaultParam: 'Espada bastarda de valor'
+      },
+      {
+        type: 'equipslot17',
+        category: 'equip',
+        colorClass: 'cat-equip',
+        labelEs: '/equipslot 17',
+        descEs: 'Mano Izquierda / Escudo (Ranura 17)',
+        descEn: 'Off-Hand / Shield (Slot 17)',
+        acceptsCond: true,
+        hasParam: true,
+        paramPlaceholderEs: 'Escudo / Off-Hand',
+        paramPlaceholderEn: 'Shield / Off-Hand',
+        defaultParam: 'Defensora de Ventormenta'
+      },
+      {
+        type: 'target',
+        category: 'target',
+        colorClass: 'cat-target',
+        labelEs: '/target',
+        descEs: 'Selecciona objetivo',
+        descEn: 'Selects a target unit',
+        acceptsCond: true,
+        hasParam: true,
+        paramPlaceholderEs: 'Opcional: Nombre',
+        paramPlaceholderEn: 'Optional: Name',
+        defaultParam: ''
+      },
+      {
+        type: 'focus',
+        category: 'target',
+        colorClass: 'cat-target',
+        labelEs: '/focus',
+        descEs: 'Establece el foco (@focus)',
+        descEn: 'Sets your focus target (@focus)',
+        acceptsCond: true,
+        hasParam: true,
+        paramPlaceholderEs: 'Opcional: unidad',
+        paramPlaceholderEn: 'Optional: unit',
+        defaultParam: ''
+      },
+      {
+        type: 'assist',
+        category: 'target',
+        colorClass: 'cat-target',
+        labelEs: '/assist',
+        descEs: 'Asiste al objetivo de un aliado',
+        descEn: 'Assists a friendly player',
+        acceptsCond: true,
+        hasParam: true,
+        paramPlaceholderEs: 'Opcional: Aliado',
+        paramPlaceholderEn: 'Optional: Friendly player',
+        defaultParam: ''
+      },
+      {
+        type: 'cleartarget',
+        category: 'target',
+        colorClass: 'cat-target',
+        labelEs: '/cleartarget',
+        descEs: 'Limpia el objetivo actual',
+        descEn: 'Clears your current target',
+        acceptsCond: true
+      },
+      {
+        type: 'targetenemy',
+        category: 'target',
+        colorClass: 'cat-target',
+        labelEs: '/targetenemy',
+        descEs: 'Selecciona al enemigo más cercano',
+        descEn: 'Targets the nearest enemy',
+        acceptsCond: true
+      }
+    ];
+
+    const PALETTE_CONDITIONALS = [
+      { id: '@mouseover', token: '@mouseover', label: '@mouseover', descEs: 'bajo tu ratón', descEn: 'unit under mouse cursor' },
+      { id: '@focus', token: '@focus', label: '@focus', descEs: 'objetivo en foco', descEn: 'focus target' },
+      { id: '@player', token: '@player', label: '@player', descEs: 'a ti mismo', descEn: 'yourself' },
+      { id: '@cursor', token: '@cursor', label: '@cursor', descEs: 'bajo el cursor', descEn: 'ground at cursor' },
+      { id: '@pet', token: '@pet', label: '@pet', descEs: 'a tu mascota', descEn: 'your pet' },
+      { id: 'help', token: 'help', label: 'help', descEs: 'aliado', descEn: 'friendly target' },
+      { id: 'harm', token: 'harm', label: 'harm', descEs: 'enemigo', descEn: 'enemy target' },
+      { id: 'nodead', token: 'nodead', label: 'nodead', descEs: 'vivo', descEn: 'alive' },
+      { id: 'dead', token: 'dead', label: 'dead', descEs: 'muerto', descEn: 'dead' },
+      { id: 'combat', token: 'combat', label: 'combat', descEs: 'en combate', descEn: 'in combat' },
+      { id: 'nocombat', token: 'nocombat', label: 'nocombat', descEs: 'fuera de combate', descEn: 'out of combat' },
+      { id: 'mod:shift', token: 'mod:shift', label: 'mod:shift', descEs: 'tecla Shift', descEn: 'holding Shift' },
+      { id: 'mod:ctrl', token: 'mod:ctrl', label: 'mod:ctrl', descEs: 'tecla Ctrl', descEn: 'holding Ctrl' },
+      { id: 'mod:alt', token: 'mod:alt', label: 'mod:alt', descEs: 'tecla Alt', descEn: 'holding Alt' },
+      { id: 'form:1', token: 'form:1', label: 'form:1..4', descEs: 'actitud/forma', descEn: 'stance/shapeshift form' }
+    ];
+
+    let canvasBlocks = [];
+    let uidCounter = 100;
+    function nextUid() {
+      uidCounter += 1;
+      return 'blk_' + uidCounter + '_' + Math.random().toString(36).slice(2, 6);
+    }
+
+    function t(key) {
+      return UI_STRINGS[uiLang][key] || UI_STRINGS.es[key] || key;
+    }
+
+    function initApp() {
+      populateFilterSelects();
+      applyStaticUiTranslations();
+      updateWowheadStatusUI();
+      renderPalette();
+      renderContextualPalette();
+      renderTemplates();
+      renderIconPicker();
+      populateDatalists();
+      loadTemplate('healer_mouseover');
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && selectedPaletteCond) {
+          clearSelectedCond();
+        }
+      });
+    }
+
+    function updateWowheadStatusUI() {
+      const dot = document.getElementById('whConnDot');
+      const txt = document.getElementById('whConnText');
+      const counts = document.getElementById('whCountsText');
+      const input = document.getElementById('whLookupIdInput');
+      const searchBox = document.getElementById('paletteSpellSearch');
+      if (!dot || !txt || !counts) return;
+
+      if (input) {
+        input.placeholder = uiLang === 'es' ? 'ID o nombre' : 'ID or name';
+      }
+      if (searchBox) {
+        searchBox.placeholder = uiLang === 'es'
+          ? 'Buscar habilidad u objeto (ej. Tótem, Penitencia)...'
+          : 'Search spell or item (e.g. Totem, Penance)...';
+      }
+
+      if (WH_DB) {
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+        txt.textContent = 'Wowhead Forever DB';
+        counts.textContent = uiLang === 'es'
+          ? `(${SPELL_DICTIONARY.length} hab. • ${ITEM_DICTIONARY.length} obj.)`
+          : `(${SPELL_DICTIONARY.length} spells • ${ITEM_DICTIONARY.length} items)`;
+      } else {
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+        txt.textContent = uiLang === 'es' ? 'DB Local' : 'Local DB';
+        counts.textContent = `(${SPELL_DICTIONARY.length})`;
+      }
+    }
+
+    // Consulta en vivo a https://nether.wowhead.com/forever/tooltip/{spell|item}/{id}
+    async function fetchLiveWowheadEntry(kind, id) {
+      const numId = parseInt(id, 10);
+      if (!numId || numId <= 0) return null;
+      try {
+        const [resEn, resEs] = await Promise.all([
+          fetch(`https://nether.wowhead.com/forever/tooltip/${kind}/${numId}?locale=0`),
+          fetch(`https://nether.wowhead.com/forever/tooltip/${kind}/${numId}?locale=6`)
+        ]);
+        if (!resEn.ok || !resEs.ok) return null;
+        const [jsonEn, jsonEs] = await Promise.all([resEn.json(), resEs.json()]);
+        if (!jsonEn || !jsonEn.name || !jsonEs || !jsonEs.name) return null;
+        return {
+          id: numId,
+          en: jsonEn.name,
+          es: jsonEs.name,
+          icon: jsonEs.icon || jsonEn.icon || 'inv_misc_questionmark'
+        };
+      } catch (e) {
+        console.error('Wowhead Forever live lookup error:', e);
+        return null;
+      }
+    }
+
+    async function fetchLiveWowheadById() {
+      const typeEl = document.getElementById('whLookupType');
+      const idEl = document.getElementById('whLookupIdInput');
+      const btnEl = document.getElementById('whLookupBtn');
+      const kind = typeEl ? typeEl.value : 'spell';
+      const rawVal = String(idEl ? idEl.value : '').trim();
+      if (!rawVal) return;
+
+      const numId = /^\d+$/.test(rawVal) ? parseInt(rawVal, 10) : 0;
+      let entry = null;
+
+      if (btnEl) btnEl.textContent = '...';
+
+      if (numId > 0) {
+        entry = await fetchLiveWowheadEntry(kind, numId);
+      } else {
+        const q = rawVal.toLowerCase();
+        const dictHit = (kind === 'spell' ? SPELL_DICTIONARY : ITEM_DICTIONARY).find(
+          d => d.es.toLowerCase().includes(q) || d.en.toLowerCase().includes(q)
+        );
+        if (dictHit) {
+          entry = { id: dictHit.id, es: dictHit.es, en: dictHit.en, icon: dictHit.icon };
+        }
+      }
+
+      if (btnEl) btnEl.textContent = '+ Wowhead';
+
+      if (!entry) {
+        const toast = document.getElementById('statusToast');
+        toast.textContent = uiLang === 'es' ? `"${rawVal}" no encontrado en Wowhead Forever` : `"${rawVal}" not found in Wowhead Forever`;
+        toast.classList.remove('opacity-0');
+        setTimeout(() => toast.classList.add('opacity-0'), 2600);
+        return;
+      }
+
+      if (kind === 'spell') {
+        if (!SPELL_DICTIONARY.some(s => s.id === entry.id)) {
+          SPELL_DICTIONARY.unshift({
+            id: entry.id,
+            es: entry.es,
+            en: entry.en,
+            icon: entry.icon,
+            classes: activeClassFilter !== 'all' ? [activeClassFilter] : [],
+            races: activeRaceFilter !== 'all' ? [activeRaceFilter] : []
+          });
+        }
+        addBlockToCanvas('cast', {
+          spellEs: entry.es,
+          spellEn: entry.en,
+          rank: 'auto',
+          condGroups: [[]]
+        });
+      } else {
+        if (!ITEM_DICTIONARY.some(i => i.id === entry.id)) {
+          ITEM_DICTIONARY.unshift({
+            id: entry.id,
+            es: entry.es,
+            en: entry.en,
+            icon: entry.icon,
+            misc: activeMiscFilter !== 'all' ? [activeMiscFilter] : ['consumables']
+          });
+        }
+        addBlockToCanvas('use', {
+          useMode: 'item',
+          itemEs: entry.es,
+          itemEn: entry.en,
+          condGroups: [[]]
+        });
+      }
+
+      populateDatalists();
+      updateWowheadStatusUI();
+      renderContextualPalette();
+      if (idEl) idEl.value = '';
+    }
+
+    // -------------------------------------------------------------------------
+    // FILTER SYSTEM (CLASS, RACE/RACIALS, MISC/UTILITY)
+    // -------------------------------------------------------------------------
+    function populateFilterSelects() {
+      const classSel = document.getElementById('classFilterSelect');
+      classSel.innerHTML = WOW_CLASSES.map(c =>
+        `<option value="${c.id}" ${activeClassFilter === c.id ? 'selected' : ''}>${uiLang === 'es' ? c.es : c.en}</option>`
+      ).join('');
+
+      const raceSel = document.getElementById('raceFilterSelect');
+      raceSel.innerHTML = WOW_RACES.map(r =>
+        `<option value="${r.id}" ${activeRaceFilter === r.id ? 'selected' : ''}>${uiLang === 'es' ? r.es : r.en}</option>`
+      ).join('');
+
+      const miscSel = document.getElementById('miscFilterSelect');
+      miscSel.innerHTML = WOW_MISC_CATEGORIES.map(m =>
+        `<option value="${m.id}" ${activeMiscFilter === m.id ? 'selected' : ''}>${uiLang === 'es' ? m.es : m.en}</option>`
+      ).join('');
+    }
+
+    function setClassFilter(val) {
+      activeClassFilter = val;
+      updateFilterUI();
+    }
+
+    function setRaceFilter(val) {
+      activeRaceFilter = val;
+      updateFilterUI();
+    }
+
+    function setMiscFilter(val) {
+      activeMiscFilter = val;
+      updateFilterUI();
+    }
+
+    function resetAllFilters() {
+      activeClassFilter = 'all';
+      activeRaceFilter = 'all';
+      activeMiscFilter = 'all';
+      populateFilterSelects();
+      updateFilterUI();
+    }
+
+    function updateFilterUI() {
+      const hasAnyFilter = activeClassFilter !== 'all' || activeRaceFilter !== 'all' || activeMiscFilter !== 'all';
+      const resetBtn = document.getElementById('resetFiltersBtn');
+      const statusEl = document.getElementById('activeFilterStatus');
+
+      if (hasAnyFilter) {
+        resetBtn.classList.remove('hidden');
+        const parts = [];
+        if (activeClassFilter !== 'all') {
+          const c = WOW_CLASSES.find(x => x.id === activeClassFilter);
+          if (c) parts.push(uiLang === 'es' ? c.es : c.en);
+        }
+        if (activeRaceFilter !== 'all') {
+          const r = WOW_RACES.find(x => x.id === activeRaceFilter);
+          if (r) parts.push(uiLang === 'es' ? r.es : r.en);
+        }
+        if (activeMiscFilter !== 'all') {
+          const m = WOW_MISC_CATEGORIES.find(x => x.id === activeMiscFilter);
+          if (m) parts.push(uiLang === 'es' ? m.es : m.en);
+        }
+        statusEl.innerHTML = `${t('showingFilteredStatus')} <span class="text-teal-300 font-medium">${parts.join(' • ')}</span>`;
+      } else {
+        resetBtn.classList.add('hidden');
+        statusEl.textContent = t('showingAllStatus');
+      }
+
+      populateDatalists();
+      renderContextualPalette();
+      renderTemplates();
+    }
+
+    // Builds ready-to-insert preset blocks for the active Class, Race (Racials), and Misc filters
+    function getContextualPresets() {
+      const presets = [];
+
+      // 1. Race Racial Blocks (from Wowhead Forever DB)
+      if (activeRaceFilter !== 'all') {
+        const raceSpells = SPELL_DICTIONARY.filter(s => s.races && s.races.includes(activeRaceFilter));
+        const raceObj = WOW_RACES.find(r => r.id === activeRaceFilter);
+        if (raceSpells.length > 0) {
+          raceSpells.forEach(sp => {
+            const name = clientLang === 'es' ? sp.es : sp.en;
+            presets.push({
+              id: sp.id,
+              whKind: 'spell',
+              icon: sp.icon,
+              badge: `/cast ${name}`,
+              desc: (raceObj && (uiLang === 'es' ? raceObj.descEs : raceObj.descEn)) || (uiLang === 'es' ? 'Habilidad racial' : 'Racial ability'),
+              colorClass: 'cat-racial',
+              tag: 'Racial',
+              blockType: 'cast',
+              overrides: {
+                spellEs: sp.es,
+                spellEn: sp.en,
+                rank: 'auto',
+                condGroups: [[]]
+              }
+            });
+          });
+        }
+      }
+
+      // 2. Class Spell Preset Blocks (from Wowhead Forever DB)
+      if (activeClassFilter !== 'all') {
+        const classSpells = SPELL_DICTIONARY.filter(s => s.classes && s.classes.includes(activeClassFilter));
+        classSpells.forEach(sp => {
+          const name = clientLang === 'es' ? sp.es : sp.en;
+          presets.push({
+            id: sp.id,
+            whKind: 'spell',
+            icon: sp.icon,
+            badge: `/cast ${name}`,
+            desc: uiLang === 'es' ? `Hechizo #${sp.id || ''} • Wowhead Forever` : `Spell #${sp.id || ''} • Wowhead Forever`,
+            colorClass: 'cat-combat',
+            tag: uiLang === 'es' ? 'Clase' : 'Class',
+            blockType: 'cast',
+            overrides: {
+              spellEs: sp.es,
+              spellEn: sp.en,
+              rank: 'auto',
+              condGroups: [[]]
+            }
+          });
+        });
+      }
+
+      // 3. Misc / Utility Preset Blocks (from Wowhead Forever DB + Slot Actions)
+      if (activeMiscFilter !== 'all') {
+        if (activeMiscFilter === 'trinkets') {
+          presets.push(
+            {
+              badge: '/use 13',
+              desc: uiLang === 'es' ? 'Activar Abalorio Superior (Ranura 13)' : 'Activate Top Trinket (Slot 13)',
+              colorClass: 'cat-combat',
+              tag: 'Slot 13',
+              blockType: 'use',
+              overrides: { useMode: '13', condGroups: [[]] }
+            },
+            {
+              badge: '/use 14',
+              desc: uiLang === 'es' ? 'Activar Abalorio Inferior (Ranura 14)' : 'Activate Bottom Trinket (Slot 14)',
+              colorClass: 'cat-combat',
+              tag: 'Slot 14',
+              blockType: 'use',
+              overrides: { useMode: '14', condGroups: [[]] }
+            }
+          );
+          ITEM_DICTIONARY.filter(i => i.misc && i.misc.includes('trinkets')).forEach(it => {
+            const name = clientLang === 'es' ? it.es : it.en;
+            presets.push({
+              id: it.id,
+              whKind: 'item',
+              icon: it.icon,
+              badge: `/use ${name}`,
+              desc: uiLang === 'es' ? `Abalorio #${it.id} • Wowhead Forever` : `Trinket #${it.id} • Wowhead Forever`,
+              colorClass: 'cat-combat',
+              tag: 'Trinket',
+              blockType: 'use',
+              overrides: { useMode: 'item', itemEs: it.es, itemEn: it.en, condGroups: [[]] }
+            });
+          });
+        } else if (activeMiscFilter === 'consumables') {
+          ITEM_DICTIONARY.filter(i => i.misc && i.misc.includes('consumables')).forEach(it => {
+            const name = clientLang === 'es' ? it.es : it.en;
+            const isBandage = it.id === 14530 || it.id === 14529;
+            presets.push({
+              id: it.id,
+              whKind: 'item',
+              icon: it.icon,
+              badge: isBandage ? `/use [@player] ${name}` : `/use ${name}`,
+              desc: uiLang === 'es' ? `Consumible #${it.id} • Wowhead Forever` : `Consumable #${it.id} • Wowhead Forever`,
+              colorClass: 'cat-combat',
+              tag: 'Item',
+              blockType: 'use',
+              overrides: {
+                useMode: 'item',
+                itemEs: it.es,
+                itemEn: it.en,
+                condGroups: isBandage ? [['@player']] : [[]]
+              }
+            });
+          });
+        } else if (activeMiscFilter === 'engineering') {
+          ITEM_DICTIONARY.filter(i => i.misc && i.misc.includes('engineering')).forEach(it => {
+            const name = clientLang === 'es' ? it.es : it.en;
+            const isSapper = it.id === 10646;
+            presets.push({
+              id: it.id,
+              whKind: 'item',
+              icon: it.icon,
+              badge: isSapper ? `/use ${name}` : `/use [@cursor] ${name}`,
+              desc: uiLang === 'es' ? `Ingeniería #${it.id} • Wowhead Forever` : `Engineering #${it.id} • Wowhead Forever`,
+              colorClass: 'cat-combat',
+              tag: 'Eng',
+              blockType: 'use',
+              overrides: {
+                useMode: 'item',
+                itemEs: it.es,
+                itemEn: it.en,
+                condGroups: isSapper ? [[]] : [['@cursor']]
+              }
+            });
+          });
+        } else if (activeMiscFilter === 'weaponswap') {
+          ITEM_DICTIONARY.filter(i => i.misc && i.misc.includes('weaponswap')).forEach(it => {
+            const name = clientLang === 'es' ? it.es : it.en;
+            const isShield = it.id === 1203 || it.id === 18168 || it.id === 2129;
+            presets.push({
+              id: it.id,
+              whKind: 'item',
+              icon: it.icon,
+              badge: `/equipslot ${isShield ? '17' : '16'} ${name}`,
+              desc: uiLang === 'es'
+                ? `${isShield ? 'Escudo (Ranura 17)' : 'Arma (Ranura 16)'} #${it.id} • Wowhead Forever`
+                : `${isShield ? 'Shield (Slot 17)' : 'Weapon (Slot 16)'} #${it.id} • Wowhead Forever`,
+              colorClass: 'cat-equip',
+              tag: isShield ? 'Slot 17' : 'Slot 16',
+              blockType: isShield ? 'equipslot17' : 'equipslot16',
+              overrides: {
+                paramEs: it.es,
+                paramEn: it.en,
+                condGroups: [[]]
+              }
+            });
+          });
+        } else if (activeMiscFilter === 'petmount') {
+          presets.push(
+            {
+              badge: '/dismount',
+              desc: uiLang === 'es' ? 'Desmonta instantáneamente' : 'Dismounts immediately',
+              colorClass: 'cat-pet',
+              tag: 'Mount',
+              blockType: 'dismount',
+              overrides: { condGroups: [[]] }
+            },
+            {
+              badge: '/petattack [harm,nodead]',
+              desc: uiLang === 'es' ? 'Envía mascota a atacar enemigo vivo' : 'Sends pet to attack living enemy',
+              colorClass: 'cat-pet',
+              tag: 'Pet',
+              blockType: 'petattack',
+              overrides: { condGroups: [['harm', 'nodead']] }
+            },
+            {
+              badge: '/petfollow',
+              desc: uiLang === 'es' ? 'Ordena a la mascota regresar' : 'Orders pet to follow you',
+              colorClass: 'cat-pet',
+              tag: 'Pet',
+              blockType: 'petfollow',
+              overrides: { condGroups: [[]] }
+            }
+          );
+        } else if (activeMiscFilter === 'targeting') {
+          presets.push(
+            {
+              badge: '/focus [@mouseover][]',
+              desc: uiLang === 'es' ? 'Guarda en @focus la unidad bajo tu ratón o tu objetivo' : 'Sets @focus to mouseover or current target',
+              colorClass: 'cat-target',
+              tag: 'Focus',
+              blockType: 'focus',
+              overrides: { condGroups: [['@mouseover'], []] }
+            },
+            {
+              badge: '/assist',
+              desc: uiLang === 'es' ? 'Asiste al objetivo de tu aliado' : 'Assists your friendly target',
+              colorClass: 'cat-target',
+              tag: 'Assist',
+              blockType: 'assist',
+              overrides: { condGroups: [[]] }
+            }
+          );
+        }
+      }
+
+      // 4. Si no hay filtro activo pero el usuario escribe en el buscador, buscar en todo el catálogo Wowhead Forever
+      const searchEl = document.getElementById('paletteSpellSearch');
+      const query = String(searchEl ? searchEl.value : '').trim().toLowerCase();
+
+      if (presets.length === 0 && query.length > 0) {
+        SPELL_DICTIONARY.forEach(sp => {
+          const activeName = (clientLang === 'es' ? sp.es : sp.en).toLowerCase();
+          if (activeName.includes(query) || String(sp.id || '').includes(query)) {
+            const name = clientLang === 'es' ? sp.es : sp.en;
+            presets.push({
+              id: sp.id,
+              whKind: 'spell',
+              icon: sp.icon,
+              badge: `/cast ${name}`,
+              desc: uiLang === 'es' ? `Hechizo #${sp.id || ''} • Wowhead Forever` : `Spell #${sp.id || ''} • Wowhead Forever`,
+              colorClass: (sp.races && sp.races.length > 0 && (!sp.classes || sp.classes.length === 0)) ? 'cat-racial' : 'cat-combat',
+              tag: (sp.races && sp.races.length > 0 && (!sp.classes || sp.classes.length === 0)) ? 'Racial' : (uiLang === 'es' ? 'Hechizo' : 'Spell'),
+              blockType: 'cast',
+              overrides: {
+                spellEs: sp.es,
+                spellEn: sp.en,
+                rank: 'auto',
+                condGroups: [[]]
+              }
+            });
+          }
+        });
+        ITEM_DICTIONARY.forEach(it => {
+          const activeName = (clientLang === 'es' ? it.es : it.en).toLowerCase();
+          if (activeName.includes(query) || String(it.id || '').includes(query)) {
+            const name = clientLang === 'es' ? it.es : it.en;
+            presets.push({
+              id: it.id,
+              whKind: 'item',
+              icon: it.icon,
+              badge: `/use ${name}`,
+              desc: uiLang === 'es' ? `Objeto #${it.id} • Wowhead Forever` : `Item #${it.id} • Wowhead Forever`,
+              colorClass: 'cat-combat',
+              tag: 'Item',
+              blockType: 'use',
+              overrides: {
+                useMode: 'item',
+                itemEs: it.es,
+                itemEn: it.en,
+                condGroups: [[]]
+              }
+            });
+          }
+        });
+      } else if (presets.length > 0 && query.length > 0) {
+        return presets.filter(p =>
+          p.badge.toLowerCase().includes(query) ||
+          String(p.id || '').includes(query)
+        );
+      }
+
+      return presets;
+    }
+
+    function renderContextualPalette() {
+      const groupEl = document.getElementById('contextualPaletteGroup');
+      const listEl = document.getElementById('palette-contextual');
+      const countEl = document.getElementById('contextualPaletteCount');
+      const titleEl = document.getElementById('contextualPaletteTitle');
+      const searchEl = document.getElementById('paletteSpellSearch');
+      const presets = getContextualPresets();
+
+      if (titleEl) {
+        const labelSpan = titleEl.querySelector('span:last-child');
+        if (labelSpan) {
+          labelSpan.textContent = uiLang === 'es' ? 'Catálogo Wowhead Forever' : 'Wowhead Forever Catalog';
+        }
+      }
+
+      groupEl.classList.remove('hidden');
+
+      if (presets.length === 0) {
+        countEl.textContent = `${SPELL_DICTIONARY.length + ITEM_DICTIONARY.length}`;
+        const hasQuery = searchEl && searchEl.value.trim().length > 0;
+        listEl.innerHTML = `<p class="text-[11px] text-zinc-500 py-1.5 px-1">${
+          hasQuery
+            ? (uiLang === 'es' ? 'Sin resultados locales. Usa "+ Wowhead" arriba con el ID.' : 'No local matches. Use "+ Wowhead" above with the ID.')
+            : (uiLang === 'es' ? 'Selecciona una Clase/Raza arriba o escribe aquí para buscar entre las habilidades y objetos.' : 'Select a Class/Race above or type here to search all spells and items.')
+        }</p>`;
+        return;
+      }
+
+      countEl.textContent = `${presets.length}`;
+      listEl.innerHTML = '';
+
+      presets.forEach(p => {
+        const el = document.createElement('div');
+        el.className = `scratch-block ${p.colorClass} px-2.5 py-2 cursor-grab active:cursor-grabbing select-none flex items-center justify-between gap-2`;
+        el.draggable = true;
+
+        el.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('application/json', JSON.stringify({
+            dragKind: 'PRESET_BLOCK',
+            blockType: p.blockType,
+            overrides: p.overrides
+          }));
+        });
+
+        el.addEventListener('click', (e) => {
+          if (e.target && e.target.closest('a')) return;
+          addBlockToCanvas(p.blockType, p.overrides);
+        });
+
+        if (p.id) {
+          el.addEventListener('mouseenter', (e) => showWhTooltip(e, p.whKind || 'spell', p.id));
+          el.addEventListener('mousemove', (e) => moveWhTooltip(e));
+          el.addEventListener('mouseleave', () => hideWhTooltip());
+        }
+
+        const iconHtml = p.icon
+          ? `<img src="https://wow.zamimg.com/images/wow/icons/medium/${encodeURIComponent(p.icon)}.jpg" alt="" class="w-6 h-6 rounded border border-[#3a4152] shrink-0 shadow-sm" loading="lazy" />`
+          : '';
+
+        const whUrl = p.id
+          ? (uiLang === 'es'
+              ? `https://www.wowhead.com/forever/es/${p.whKind || 'spell'}=${p.id}`
+              : `https://www.wowhead.com/forever/${p.whKind || 'spell'}=${p.id}`)
+          : '';
+
+        const whLinkHtml = whUrl
+          ? `<a href="${whUrl}" target="_blank" rel="noopener noreferrer" class="text-[10px] text-zinc-500 hover:text-amber-300 px-1" title="Wowhead Forever">↗</a>`
+          : '';
+
+        el.innerHTML = `
+          <div class="flex items-center gap-2 min-w-0">
+            ${iconHtml}
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="cmd-badge font-mono font-semibold text-xs px-1.5 py-0.5 rounded border truncate">${escapeHtml(p.badge)}</span>
+                <span class="text-[9px] px-1.5 py-0.5 bg-teal-500/20 text-teal-300 border border-teal-500/30 rounded font-mono shrink-0">${escapeHtml(p.tag)}</span>
+              </div>
+              <p class="text-[10px] text-zinc-400 truncate mt-0.5">${escapeHtml(p.desc)}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-0.5 shrink-0">
+            ${whLinkHtml}
+            <span class="text-xs text-zinc-400 hover:text-zinc-100 w-5 h-5 rounded flex items-center justify-center">+</span>
+          </div>
+        `;
+        listEl.appendChild(el);
+      });
+    }
+
+    function renderTemplates() {
+      const container = document.getElementById('templatesListContainer');
+      const badge = document.getElementById('templatesCountBadge');
+
+      const filtered = TEMPLATES_CATALOG.filter(tpl => {
+        const matchClass = activeClassFilter === 'all' || (tpl.classes && tpl.classes.includes(activeClassFilter));
+        const matchRace = activeRaceFilter === 'all' || (tpl.races && tpl.races.includes(activeRaceFilter));
+        const matchMisc = activeMiscFilter === 'all' || (tpl.misc && tpl.misc.includes(activeMiscFilter));
+        return matchClass && matchRace && matchMisc;
+      });
+
+      const listToShow = filtered.length > 0 ? filtered : TEMPLATES_CATALOG;
+      badge.textContent = `${listToShow.length}`;
+
+      container.innerHTML = listToShow.map(tpl => {
+        const title = uiLang === 'es' ? tpl.titleEs : tpl.titleEn;
+        const desc = uiLang === 'es' ? tpl.descEs : tpl.descEn;
+        return `
+          <button onclick="loadTemplate('${tpl.key}')" class="text-left p-2.5 rounded bg-[#181b24] hover:bg-[#1f232e] border border-[#262a36] border-l-[3px] ${tpl.borderClass} transition">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-medium ${tpl.titleColor}">
+                ${escapeHtml(title)}
+              </span>
+              <span class="text-[10px] text-zinc-500 font-mono shrink-0">${t('loadWord')}</span>
+            </div>
+            <p class="text-[11px] text-zinc-500 mt-0.5">
+              ${desc}
+            </p>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function setWebLanguage(lang) {
+      uiLang = lang;
+      document.documentElement.lang = lang;
+
+      const esBtn = document.getElementById('webLangEsBtn');
+      const enBtn = document.getElementById('webLangEnBtn');
+
+      if (lang === 'es') {
+        esBtn.className = 'px-2 py-1 rounded flex items-center gap-1.5 text-[11px] font-medium transition-all bg-[#252934] text-zinc-100 ring-1 ring-amber-500/40';
+        enBtn.className = 'px-2 py-1 rounded flex items-center gap-1.5 text-[11px] font-medium transition-all text-zinc-400 hover:text-zinc-200 opacity-75 hover:opacity-100';
+      } else {
+        enBtn.className = 'px-2 py-1 rounded flex items-center gap-1.5 text-[11px] font-medium transition-all bg-[#252934] text-zinc-100 ring-1 ring-amber-500/40';
+        esBtn.className = 'px-2 py-1 rounded flex items-center gap-1.5 text-[11px] font-medium transition-all text-zinc-400 hover:text-zinc-200 opacity-75 hover:opacity-100';
+      }
+
+      populateFilterSelects();
+      applyStaticUiTranslations();
+      // El idioma de la macro sigue siempre al idioma de la web (sin mezclar idiomas)
+      setClientLanguage(lang);
+      updateWowheadStatusUI();
+      updateFilterUI();
+      renderPalette();
+      filterPalette(activePaletteFilter);
+      renderCanvas();
+    }
+
+    function applyStaticUiTranslations() {
+      document.getElementById('uiSubtitle').textContent = t('subtitle');
+      document.getElementById('uiWebLangLabel').textContent = t('webLangLabel');
+      document.getElementById('uiClientLabel').textContent = t('clientLabel');
+      document.getElementById('uiRulesBtn').textContent = t('rulesBtn');
+      document.getElementById('uiFilterBarLabel').textContent = t('filterBarLabel');
+      document.getElementById('uiClassFilterLabel').textContent = t('classFilterLabel');
+      document.getElementById('uiRaceFilterLabel').textContent = t('raceFilterLabel');
+      document.getElementById('uiMiscFilterLabel').textContent = t('miscFilterLabel');
+      document.getElementById('resetFiltersBtn').textContent = t('resetFiltersBtn');
+      document.getElementById('uiPaletteTitle').textContent = t('paletteTitle');
+      document.getElementById('uiPaletteHint').textContent = t('paletteHint');
+      document.getElementById('tab-all').textContent = t('tabAll');
+      document.getElementById('tab-cond').textContent = t('tabCond');
+      document.getElementById('tab-combat').textContent = t('tabCombat');
+      document.getElementById('uiCatHeaders').textContent = t('catHeaders');
+      document.getElementById('uiCatCond').textContent = t('catCond');
+      document.getElementById('uiCatCondSub').textContent = t('catCondSub');
+      document.getElementById('uiCatCondDesc').innerHTML = t('catCondDesc');
+      document.getElementById('uiCatCombat').textContent = t('catCombat');
+      document.getElementById('uiCatPet').textContent = t('catPet');
+      document.getElementById('uiCatEquip').textContent = t('catEquip');
+      document.getElementById('uiCatTarget').textContent = t('catTarget');
+      document.getElementById('uiCanvasTitle').textContent = t('canvasTitle');
+      document.getElementById('toggleExplainBtn').textContent = t('explainBtn');
+      document.getElementById('uiClearBtn').textContent = t('clearBtn');
+      document.getElementById('uiLegendAnd').innerHTML = t('legendAnd');
+      document.getElementById('uiLegendOr').innerHTML = t('legendOr');
+      document.getElementById('uiCancelCondBtn').textContent = t('cancelBtn');
+      document.getElementById('uiFooterNote').innerHTML = t('footerNote');
+      document.getElementById('uiOutputTitle').textContent = t('outputTitle');
+      document.getElementById('scopeGeneralBtn').textContent = t('scopeGeneral');
+      document.getElementById('scopeCharBtn').textContent = t('scopeChar');
+      document.getElementById('uiMacroNameLabel').textContent = t('macroNameLabel');
+      document.getElementById('uiIconLabel').textContent = t('iconLabel');
+      document.getElementById('uiCompiledTitle').textContent = t('compiledTitle');
+      document.getElementById('uiCopyBtn').textContent = t('copyBtn');
+      document.getElementById('uiLimitLabel').textContent = t('limitLabel');
+      document.getElementById('charLimitWarning').textContent = t('limitWarning');
+      document.getElementById('uiSummaryTitle').textContent = t('summaryTitle');
+      document.getElementById('scopeBadgeLabel').textContent = macroScope === 'general' ? t('scopeGeneral') : t('scopeChar');
+      document.getElementById('uiTemplatesTitle').textContent = t('templatesTitle');
+
+      document.getElementById('uiModalTitle').textContent = t('modalTitle');
+      document.getElementById('uiModalCloseBtn').textContent = t('modalClose');
+      document.getElementById('uiModalBody').innerHTML = t('modalBody');
+    }
+
+    function populateDatalists() {
+      const spellListEl = document.getElementById('foreverSpellsList');
+      const filteredSpells = SPELL_DICTIONARY.filter(s => {
+        if (activeClassFilter !== 'all' && s.classes && s.classes.includes(activeClassFilter)) return true;
+        if (activeRaceFilter !== 'all' && s.races && s.races.includes(activeRaceFilter)) return true;
+        if (activeClassFilter === 'all' && activeRaceFilter === 'all') return true;
+        return false;
+      });
+      const spellsToUse = filteredSpells.length > 0 ? filteredSpells : SPELL_DICTIONARY;
+      // Solo el nombre en el idioma activo (sin mezclar idiomas)
+      spellListEl.innerHTML = spellsToUse.map(s =>
+        `<option value="${escapeHtml(clientLang === 'es' ? s.es : s.en)}"></option>`
+      ).join('');
+
+      const itemListEl = document.getElementById('foreverItemsList');
+      itemListEl.innerHTML = ITEM_DICTIONARY.map(i =>
+        `<option value="${escapeHtml(clientLang === 'es' ? i.es : i.en)}"></option>`
+      ).join('');
+    }
+
+    function renderPalette() {
+      const containers = {
+        header: document.getElementById('palette-headers'),
+        combat: document.getElementById('palette-combat'),
+        pet: document.getElementById('palette-pet'),
+        equip: document.getElementById('palette-equip'),
+        target: document.getElementById('palette-target')
+      };
+
+      Object.values(containers).forEach(el => { if (el) el.innerHTML = ''; });
+
+      PALETTE_BLOCKS.forEach(block => {
+        const el = document.createElement('div');
+        el.className = `scratch-block ${block.colorClass} px-3 py-2 cursor-grab active:cursor-grabbing select-none flex items-center justify-between gap-2`;
+        el.draggable = true;
+
+        el.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('application/json', JSON.stringify({
+            dragKind: 'ACTION_BLOCK',
+            blockType: block.type
+          }));
+        });
+
+        el.addEventListener('click', () => {
+          addBlockToCanvas(block.type);
+        });
+
+        const blockDesc = uiLang === 'es' ? block.descEs : block.descEn;
+        const baseIconMap = {
+          showtooltip: 'inv_misc_questionmark',
+          show: 'inv_misc_book_09',
+          cast: 'spell_frost_frostbolt02',
+          castsequence: 'spell_shadow_requiem',
+          use: 'inv_jewelry_talisman_08',
+          stopcasting: 'spell_frost_stun',
+          cancelaura: 'spell_holy_dispelmagic',
+          startattack: 'ability_meleedamage',
+          petattack: 'ability_hunter_pet_wolf',
+          petfollow: 'ability_hunter_mendpet',
+          petpassive: 'ability_seal',
+          dismount: 'ability_mount_ridinghorse',
+          equip: 'inv_staff_13',
+          equipslot16: 'inv_sword_04',
+          equipslot17: 'inv_shield_06',
+          target: 'ability_hunter_snipershot',
+          focus: 'ability_hunter_mastermarksman',
+          assist: 'ability_warrior_rallyingcry',
+          cleartarget: 'spell_shadow_Sacrificialshield',
+          targetenemy: 'ability_marksmanship'
+        };
+        const baseIcon = (baseIconMap[block.type] || 'inv_misc_questionmark').toLowerCase();
+
+        el.innerHTML = `
+          <div class="flex items-center gap-2 min-w-0">
+            <img src="https://wow.zamimg.com/images/wow/icons/small/${baseIcon}.jpg" alt="" class="w-5 h-5 rounded border border-[#323846] shrink-0" loading="lazy" />
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="cmd-badge font-mono font-semibold text-xs px-1.5 py-0.5 rounded border">${block.labelEs}</span>
+                ${block.hasRank ? `<span class="text-[9px] px-1.5 py-0.5 bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded font-mono">${t('rankBadge')}</span>` : ''}
+              </div>
+              <p class="text-[11px] text-zinc-400 truncate mt-0.5">${blockDesc}</p>
+            </div>
+          </div>
+          <span class="text-xs text-zinc-400 hover:text-zinc-100 w-5 h-5 rounded flex items-center justify-center shrink-0">+</span>
+        `;
+
+        if (containers[block.category]) {
+          containers[block.category].appendChild(el);
+        }
+      });
+
+      const condContainer = document.getElementById('palette-conditionals');
+      condContainer.innerHTML = '';
+      PALETTE_CONDITIONALS.forEach(cond => {
+        const pill = document.createElement('div');
+        pill.className = `cat-cond text-[11px] font-mono cursor-grab active:cursor-grabbing`;
+        pill.draggable = true;
+        pill.title = uiLang === 'es' ? cond.descEs : cond.descEn;
+
+        pill.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('application/json', JSON.stringify({
+            dragKind: 'COND_PILL',
+            condToken: cond.token
+          }));
+        });
+
+        pill.addEventListener('click', () => {
+          selectPaletteCond(cond.token);
+        });
+
+        pill.innerHTML = `<span>${cond.label}</span>`;
+        condContainer.appendChild(pill);
+      });
+    }
+
+    function filterPalette(category) {
+      activePaletteFilter = category;
+      document.querySelectorAll('.palette-tab').forEach(btn => {
+        btn.className = 'palette-tab py-1 px-2 rounded text-zinc-400 hover:text-zinc-200 hover:bg-[#191c24]';
+      });
+      const activeTab = document.getElementById('tab-' + category);
+      if (activeTab) {
+        activeTab.className = 'palette-tab py-1 px-2 rounded bg-[#222631] text-zinc-100';
+      }
+
+      document.querySelectorAll('.palette-group').forEach(group => {
+        if (category === 'all' || group.dataset.cat === category) {
+          group.classList.remove('hidden');
+        } else {
+          group.classList.add('hidden');
+        }
+      });
+    }
+
+    function selectPaletteCond(token) {
+      selectedPaletteCond = token;
+      const banner = document.getElementById('activeCondBanner');
+      const textEl = document.getElementById('uiSelectedCondText');
+      if (uiLang === 'es') {
+        textEl.innerHTML = `Seleccionado: <strong id="activeCondLabel" class="font-mono text-white">[${token}]</strong> — Haz clic en un hueco <span class="font-mono text-zinc-400">[+ Condición]</span>`;
+      } else {
+        textEl.innerHTML = `Selected: <strong id="activeCondLabel" class="font-mono text-white">[${token}]</strong> — Click any <span class="font-mono text-zinc-400">[+ Condition]</span> slot`;
+      }
+      banner.classList.remove('hidden');
+    }
+
+    function clearSelectedCond() {
+      selectedPaletteCond = null;
+      document.getElementById('activeCondBanner').classList.add('hidden');
+    }
+
+    function createBlockInstance(blockType, overrides = {}) {
+      const def = PALETTE_BLOCKS.find(b => b.type === blockType);
+      if (!def) return null;
+
+      const defaultCondGroups = def.acceptsCond ? [[]] : [];
+
+      return whNormalizeBlock({
+        id: nextUid(),
+        type: def.type,
+        category: def.category,
+        colorClass: def.colorClass,
+        acceptsCond: !!def.acceptsCond,
+        condGroups: overrides.condGroups ? JSON.parse(JSON.stringify(overrides.condGroups)) : defaultCondGroups,
+        spellEs: overrides.spellEs !== undefined ? overrides.spellEs : (def.defaultSpellEs || ''),
+        spellEn: overrides.spellEn !== undefined ? overrides.spellEn : (def.defaultSpellEn || ''),
+        rank: overrides.rank !== undefined ? overrides.rank : (def.defaultRank || 'auto'),
+        reset: overrides.reset !== undefined ? overrides.reset : (def.defaultReset || '8'),
+        seqEs: overrides.seqEs !== undefined ? overrides.seqEs : (def.defaultSeqEs || ''),
+        seqEn: overrides.seqEn !== undefined ? overrides.seqEn : (def.defaultSeqEn || ''),
+        useMode: overrides.useMode !== undefined ? overrides.useMode : (def.defaultUseMode || '13'),
+        itemEs: overrides.itemEs !== undefined ? overrides.itemEs : (def.defaultItemEs || ''),
+        itemEn: overrides.itemEn !== undefined ? overrides.itemEn : (def.defaultItemEn || ''),
+        paramEs: overrides.paramEs !== undefined ? overrides.paramEs : (def.defaultParam || ''),
+        paramEn: overrides.paramEn !== undefined ? overrides.paramEn : (def.defaultParamEn || def.defaultParam || ''),
+        showExplain: overrides.showExplain !== undefined ? overrides.showExplain : true
+      });
+    }
+
+    function addBlockToCanvas(blockType, overrides = {}, insertIndex = null) {
+      const instance = createBlockInstance(blockType, overrides);
+      if (!instance) return;
+      if (insertIndex !== null && insertIndex >= 0 && insertIndex <= canvasBlocks.length) {
+        canvasBlocks.splice(insertIndex, 0, instance);
+      } else {
+        canvasBlocks.push(instance);
+      }
+      renderCanvas();
+    }
+
+    function removeBlockFromCanvas(blockId) {
+      canvasBlocks = canvasBlocks.filter(b => b.id !== blockId);
+      renderCanvas();
+    }
+
+    function moveBlock(blockId, delta) {
+      const idx = canvasBlocks.findIndex(b => b.id === blockId);
+      if (idx === -1) return;
+      const targetIdx = idx + delta;
+      if (targetIdx < 0 || targetIdx >= canvasBlocks.length) return;
+      const [moved] = canvasBlocks.splice(idx, 1);
+      canvasBlocks.splice(targetIdx, 0, moved);
+      renderCanvas();
+    }
+
+    function duplicateBlock(blockId) {
+      const idx = canvasBlocks.findIndex(b => b.id === blockId);
+      if (idx === -1) return;
+      const orig = canvasBlocks[idx];
+      const copy = JSON.parse(JSON.stringify(orig));
+      copy.id = nextUid();
+      canvasBlocks.splice(idx + 1, 0, copy);
+      renderCanvas();
+    }
+
+    function toggleBlockExplanation(blockId) {
+      const blk = canvasBlocks.find(b => b.id === blockId);
+      if (!blk) return;
+      blk.showExplain = !blk.showExplain;
+      renderCanvas();
+    }
+
+    function toggleAllExplanations() {
+      showAllExplanations = !showAllExplanations;
+      canvasBlocks.forEach(b => { b.showExplain = showAllExplanations; });
+      renderCanvas();
+    }
+
+    function clearCanvas() {
+      canvasBlocks = [];
+      renderCanvas();
+    }
+
+    function addOrGroup(blockId) {
+      const blk = canvasBlocks.find(b => b.id === blockId);
+      if (!blk || !blk.acceptsCond) return;
+      blk.condGroups.push([]);
+      renderCanvas();
+    }
+
+    function removeOrGroup(blockId, groupIdx) {
+      const blk = canvasBlocks.find(b => b.id === blockId);
+      if (!blk) return;
+      if (blk.condGroups.length <= 1) {
+        blk.condGroups[0] = [];
+      } else {
+        blk.condGroups.splice(groupIdx, 1);
+      }
+      renderCanvas();
+    }
+
+    function addConditionToGroup(blockId, groupIdx, condToken) {
+      const blk = canvasBlocks.find(b => b.id === blockId);
+      if (!blk || !blk.acceptsCond) return;
+      if (!blk.condGroups[groupIdx]) {
+        blk.condGroups[groupIdx] = [];
+      }
+      if (!blk.condGroups[groupIdx].includes(condToken)) {
+        blk.condGroups[groupIdx].push(condToken);
+      }
+      if (selectedPaletteCond) {
+        clearSelectedCond();
+      }
+      renderCanvas();
+    }
+
+    function removeConditionFromGroup(blockId, groupIdx, condIdx) {
+      const blk = canvasBlocks.find(b => b.id === blockId);
+      if (!blk || !blk.condGroups[groupIdx]) return;
+      blk.condGroups[groupIdx].splice(condIdx, 1);
+      renderCanvas();
+    }
+
+    function cycleFormNumber(blockId, groupIdx, condIdx) {
+      const blk = canvasBlocks.find(b => b.id === blockId);
+      if (!blk || !blk.condGroups[groupIdx]) return;
+      const current = blk.condGroups[groupIdx][condIdx];
+      if (!current.startsWith('form:')) return;
+      const num = parseInt(current.split(':')[1] || '1', 10);
+      const nextNum = num >= 4 ? 1 : num + 1;
+      blk.condGroups[groupIdx][condIdx] = `form:${nextNum}`;
+      renderCanvas();
+    }
+
+    function handleCanvasDragOver(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add('drag-over');
+    }
+
+    function handleCanvasDragLeave(e) {
+      e.currentTarget.classList.remove('drag-over');
+    }
+
+    function handleCanvasDrop(e) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('drag-over');
+      const raw = e.dataTransfer.getData('application/json');
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        if (data.dragKind === 'ACTION_BLOCK') {
+          addBlockToCanvas(data.blockType);
+        } else if (data.dragKind === 'PRESET_BLOCK') {
+          addBlockToCanvas(data.blockType, data.overrides || {});
+        } else if (data.dragKind === 'REORDER_BLOCK') {
+          const fromIdx = canvasBlocks.findIndex(b => b.id === data.blockId);
+          if (fromIdx !== -1) {
+            const [moved] = canvasBlocks.splice(fromIdx, 1);
+            canvasBlocks.push(moved);
+            renderCanvas();
+          }
+        } else if (data.dragKind === 'COND_PILL') {
+          const compatible = [...canvasBlocks].reverse().find(b => b.acceptsCond);
+          if (compatible) {
+            if (compatible.condGroups.length === 0) compatible.condGroups.push([]);
+            addConditionToGroup(compatible.id, compatible.condGroups.length - 1, data.condToken);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function handleSlotDragOver(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.currentTarget.classList.add('drag-over');
+    }
+
+    function handleSlotDragLeave(e) {
+      e.stopPropagation();
+      e.currentTarget.classList.remove('drag-over');
+    }
+
+    function handleSlotDrop(e, blockId, groupIdx) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.currentTarget.classList.remove('drag-over');
+      const raw = e.dataTransfer.getData('application/json');
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        if (data.dragKind === 'COND_PILL' && data.condToken) {
+          addConditionToGroup(blockId, groupIdx, data.condToken);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function handleBlockReorderDrop(e, targetBlockId) {
+      e.preventDefault();
+      const raw = e.dataTransfer.getData('application/json');
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        const targetIdx = canvasBlocks.findIndex(b => b.id === targetBlockId);
+        if (data.dragKind === 'REORDER_BLOCK' && data.blockId !== targetBlockId) {
+          const fromIdx = canvasBlocks.findIndex(b => b.id === data.blockId);
+          if (fromIdx !== -1 && targetIdx !== -1) {
+            const [moved] = canvasBlocks.splice(fromIdx, 1);
+            canvasBlocks.splice(targetIdx, 0, moved);
+            renderCanvas();
+          }
+          e.stopPropagation();
+        } else if (data.dragKind === 'ACTION_BLOCK' && targetIdx !== -1) {
+          addBlockToCanvas(data.blockType, {}, targetIdx + 1);
+          e.stopPropagation();
+        } else if (data.dragKind === 'PRESET_BLOCK' && targetIdx !== -1) {
+          addBlockToCanvas(data.blockType, data.overrides || {}, targetIdx + 1);
+          e.stopPropagation();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function formatConditionsBracket(condGroups) {
+      if (!condGroups || condGroups.length === 0) return '';
+      return condGroups
+        .filter(grp => grp && grp.length > 0)
+        .map(grp => `[${grp.join(',')}]`)
+        .join('');
+    }
+
+    function resolveBilingualValue(blk, fieldPrefix) {
+      const valEs = blk[fieldPrefix + 'Es'] || '';
+      const valEn = blk[fieldPrefix + 'En'] || '';
+      if (clientLang === 'es') return valEs || valEn;
+      return valEn || valEs;
+    }
+
+    function compileBlockLine(blk) {
+      const condStr = blk.acceptsCond ? formatConditionsBracket(blk.condGroups) : '';
+
+      switch (blk.type) {
+        case 'showtooltip': {
+          const param = resolveBilingualValue(blk, 'param').trim();
+          if (!condStr && !param) return '#showtooltip';
+          return `#showtooltip ${condStr}${condStr && param ? ' ' : ''}${param}`.trim();
+        }
+        case 'show': {
+          const param = resolveBilingualValue(blk, 'param').trim();
+          return param ? `#show ${param}` : '#show';
+        }
+        case 'cast': {
+          const spellName = resolveBilingualValue(blk, 'spell').trim() || (clientLang === 'es' ? 'Descarga de escarcha' : 'Frostbolt');
+          let rankSuffix = '';
+          if (blk.rank && blk.rank !== 'auto') {
+            rankSuffix = clientLang === 'es' ? `(Rango ${blk.rank})` : `(Rank ${blk.rank})`;
+          }
+          return `/cast ${condStr}${condStr ? ' ' : ''}${spellName}${rankSuffix}`;
+        }
+        case 'castsequence': {
+          const resetVal = (blk.reset || '').trim();
+          const seqText = resolveBilingualValue(blk, 'seq').trim();
+          const resetPrefix = resetVal ? `reset=${resetVal} ` : '';
+          return `/castsequence ${condStr}${condStr ? ' ' : ''}${resetPrefix}${seqText}`.trim();
+        }
+        case 'use': {
+          let targetItem = '';
+          if (blk.useMode === '13') targetItem = '13';
+          else if (blk.useMode === '14') targetItem = '14';
+          else targetItem = resolveBilingualValue(blk, 'item').trim() || '13';
+          return `/use ${condStr}${condStr ? ' ' : ''}${targetItem}`;
+        }
+        case 'stopcasting':
+          return '/stopcasting';
+        case 'cancelaura': {
+          const aura = resolveBilingualValue(blk, 'param').trim() || (clientLang === 'es' ? 'Bloqueo de hielo' : 'Ice Block');
+          return `/cancelaura ${aura}`;
+        }
+        case 'startattack':
+          return `/startattack${condStr ? ' ' + condStr : ''}`;
+        case 'petattack':
+          return `/petattack${condStr ? ' ' + condStr : ''}`;
+        case 'petfollow':
+          return `/petfollow${condStr ? ' ' + condStr : ''}`;
+        case 'petpassive':
+          return '/petpassive';
+        case 'dismount':
+          return `/dismount${condStr ? ' ' + condStr : ''}`;
+        case 'equip': {
+          const item = resolveBilingualValue(blk, 'param').trim() || 'Arma';
+          return `/equip ${condStr}${condStr ? ' ' : ''}${item}`;
+        }
+        case 'equipslot16': {
+          const weapon = resolveBilingualValue(blk, 'param').trim() || (clientLang === 'es' ? 'Espada bastarda de valor' : 'Valor Bastard Sword');
+          return `/equipslot ${condStr}${condStr ? ' ' : ''}16 ${weapon}`;
+        }
+        case 'equipslot17': {
+          const shield = resolveBilingualValue(blk, 'param').trim() || (clientLang === 'es' ? 'Defensora de Ventormenta' : 'Stormwind Defender');
+          return `/equipslot ${condStr}${condStr ? ' ' : ''}17 ${shield}`;
+        }
+        case 'target': {
+          const name = resolveBilingualValue(blk, 'param').trim();
+          return `/target ${condStr}${condStr && name ? ' ' : ''}${name}`.trim();
+        }
+        case 'focus': {
+          const name = resolveBilingualValue(blk, 'param').trim();
+          return `/focus ${condStr}${condStr && name ? ' ' : ''}${name}`.trim();
+        }
+        case 'assist': {
+          const name = resolveBilingualValue(blk, 'param').trim();
+          return `/assist ${condStr}${condStr && name ? ' ' : ''}${name}`.trim();
+        }
+        case 'cleartarget':
+          return `/cleartarget${condStr ? ' ' + condStr : ''}`;
+        case 'targetenemy':
+          return `/targetenemy${condStr ? ' ' + condStr : ''}`;
+        default:
+          return '';
+      }
+    }
+
+    function describeConditionGroup(grp) {
+      if (!grp || grp.length === 0) return '';
+      const unitToken = grp.find(t => t.startsWith('@'));
+      const otherTokens = grp.filter(t => !t.startsWith('@'));
+
+      if (uiLang === 'en') {
+        let unitPhrase = '';
+        if (unitToken === '@mouseover') unitPhrase = 'on your mouseover target';
+        else if (unitToken === '@focus') unitPhrase = 'on your @focus target';
+        else if (unitToken === '@player') unitPhrase = 'on yourself (@player)';
+        else if (unitToken === '@cursor') unitPhrase = 'at your cursor ground location';
+        else if (unitToken === '@pet') unitPhrase = 'on your pet (@pet)';
+
+        const reqs = [];
+        otherTokens.forEach(tk => {
+          if (tk === 'help') reqs.push('is friendly');
+          else if (tk === 'harm') reqs.push('is hostile');
+          else if (tk === 'nodead') reqs.push('is alive');
+          else if (tk === 'dead') reqs.push('is dead');
+          else if (tk === 'combat') reqs.push('you are in combat');
+          else if (tk === 'nocombat') reqs.push('you are out of combat');
+          else if (tk === 'mod:shift') reqs.push('holding Shift');
+          else if (tk === 'mod:ctrl') reqs.push('holding Ctrl');
+          else if (tk === 'mod:alt') reqs.push('holding Alt');
+          else if (tk.startsWith('form:')) reqs.push(`in form ${tk.split(':')[1]}`);
+        });
+
+        if (unitPhrase && reqs.length > 0) return `${unitPhrase} (if ${reqs.join(' and ')})`;
+        if (unitPhrase) return unitPhrase;
+        if (reqs.length > 0) return `if ${reqs.join(' and ')}`;
+        return '';
+      }
+
+      let unitPhrase = '';
+      if (unitToken === '@mouseover') unitPhrase = 'al objetivo bajo tu ratón';
+      else if (unitToken === '@focus') unitPhrase = 'a tu objetivo en foco (@focus)';
+      else if (unitToken === '@player') unitPhrase = 'a ti mismo (@player)';
+      else if (unitToken === '@cursor') unitPhrase = 'en el suelo bajo tu cursor';
+      else if (unitToken === '@pet') unitPhrase = 'a tu mascota (@pet)';
+
+      const reqs = [];
+      otherTokens.forEach(tk => {
+        if (tk === 'help') reqs.push('es aliado');
+        else if (tk === 'harm') reqs.push('es enemigo');
+        else if (tk === 'nodead') reqs.push('está vivo');
+        else if (tk === 'dead') reqs.push('está muerto');
+        else if (tk === 'combat') reqs.push('estás en combate');
+        else if (tk === 'nocombat') reqs.push('estás fuera de combate');
+        else if (tk === 'mod:shift') reqs.push('pulsas Shift');
+        else if (tk === 'mod:ctrl') reqs.push('pulsas Ctrl');
+        else if (tk === 'mod:alt') reqs.push('pulsas Alt');
+        else if (tk.startsWith('form:')) reqs.push(`forma ${tk.split(':')[1]}`);
+      });
+
+      if (unitPhrase && reqs.length > 0) return `${unitPhrase} (si ${reqs.join(' y ')})`;
+      if (unitPhrase) return unitPhrase;
+      if (reqs.length > 0) return `si ${reqs.join(' y ')}`;
+      return '';
+    }
+
+    function explainBlockNatural(blk) {
+      const activeGroups = (blk.condGroups || []).filter(g => g && g.length > 0);
+      const groupDescriptions = activeGroups.map(describeConditionGroup);
+
+      if (uiLang === 'en') {
+        let condNarrative = '';
+        if (groupDescriptions.length === 1) {
+          condNarrative = ' ' + groupDescriptions[0];
+        } else if (groupDescriptions.length > 1) {
+          const first = groupDescriptions[0];
+          const rest = groupDescriptions.slice(1).join('; otherwise, ');
+          condNarrative = ` ${first}; otherwise, ${rest}`;
+        }
+
+        switch (blk.type) {
+          case 'showtooltip': {
+            const p = resolveBilingualValue(blk, 'param').trim();
+            return p ? `Shows the icon and tooltip for "${p}".` : `Dynamically updates the macro icon and tooltip.`;
+          }
+          case 'show':
+            return `Displays the dynamic icon on the action bar.`;
+          case 'cast': {
+            const spell = resolveBilingualValue(blk, 'spell').trim() || 'the spell';
+            const rankDesc = (!blk.rank || blk.rank === 'auto') ? 'Auto Max Rank' : `Rank ${blk.rank}`;
+            return `Casts "${spell}"${condNarrative || ' on your current target'} (${rankDesc}).`;
+          }
+          case 'castsequence': {
+            const seq = resolveBilingualValue(blk, 'seq').trim();
+            return `Cycles through [${seq}]${condNarrative}, resetting after ${blk.reset || 8}s.`;
+          }
+          case 'use': {
+            if (blk.useMode === '13') return `Activates Top Trinket (Slot 13)${condNarrative}.`;
+            if (blk.useMode === '14') return `Activates Bottom Trinket (Slot 14)${condNarrative}.`;
+            const item = resolveBilingualValue(blk, 'item').trim() || 'the item';
+            return `Uses "${item}"${condNarrative}.`;
+          }
+          case 'stopcasting':
+            return `Immediately stops your current spell cast.`;
+          case 'cancelaura': {
+            const aura = resolveBilingualValue(blk, 'param').trim();
+            return `Cancels the "${aura}" buff.`;
+          }
+          case 'startattack':
+            return `Starts melee auto-attack${condNarrative}.`;
+          case 'petattack':
+            return `Sends your pet to attack${condNarrative || ' your current target'}.`;
+          case 'petfollow':
+            return `Orders your pet to follow you${condNarrative}.`;
+          case 'petpassive':
+            return `Sets your pet to passive mode.`;
+          case 'dismount':
+            return `Dismounts you${condNarrative}.`;
+          case 'equip': {
+            const item = resolveBilingualValue(blk, 'param').trim();
+            return `Equips "${item}"${condNarrative}.`;
+          }
+          case 'equipslot16': {
+            const w = resolveBilingualValue(blk, 'param').trim();
+            return `Equips "${w}" in Main-Hand (Slot 16)${condNarrative}.`;
+          }
+          case 'equipslot17': {
+            const s = resolveBilingualValue(blk, 'param').trim();
+            return `Equips "${s}" in Off-Hand / Shield (Slot 17)${condNarrative}.`;
+          }
+          case 'target': {
+            const n = resolveBilingualValue(blk, 'param').trim();
+            return `Targets${n ? ` "${n}"` : ' unit'}${condNarrative}.`;
+          }
+          case 'focus':
+            return `Sets focus${condNarrative || ' on your current target'}.`;
+          case 'assist':
+            return `Assists friendly target${condNarrative}.`;
+          case 'cleartarget':
+            return `Clears your current target${condNarrative}.`;
+          case 'targetenemy':
+            return `Targets the nearest enemy${condNarrative}.`;
+          default:
+            return '';
+        }
+      }
+
+      // Español
+      let condNarrative = '';
+      if (groupDescriptions.length === 1) {
+        condNarrative = ' ' + groupDescriptions[0];
+      } else if (groupDescriptions.length > 1) {
+        const first = groupDescriptions[0];
+        const rest = groupDescriptions.slice(1).join('; si no, ');
+        condNarrative = ` ${first}; si no, ${rest}`;
+      }
+
+      switch (blk.type) {
+        case 'showtooltip': {
+          const p = resolveBilingualValue(blk, 'param').trim();
+          return p
+            ? `Muestra el icono y descripción de "${p}".`
+            : `Actualiza el icono y descripción dinámicamente.`;
+        }
+        case 'show':
+          return `Muestra el icono dinámico en la barra.`;
+        case 'cast': {
+          const spell = resolveBilingualValue(blk, 'spell').trim() || 'el hechizo';
+          const rankDesc = (!blk.rank || blk.rank === 'auto')
+            ? 'Rango Máx Automático'
+            : `Rango ${blk.rank}`;
+          return `Lanza "${spell}"${condNarrative || ' al objetivo actual'} (${rankDesc}).`;
+        }
+        case 'castsequence': {
+          const seq = resolveBilingualValue(blk, 'seq').trim();
+          return `Secuencia [${seq}]${condNarrative}, reinicio ${blk.reset || 8}s.`;
+        }
+        case 'use': {
+          if (blk.useMode === '13') return `Activa Abalorio Superior (13)${condNarrative}.`;
+          if (blk.useMode === '14') return `Activa Abalorio Inferior (14)${condNarrative}.`;
+          const item = resolveBilingualValue(blk, 'item').trim() || 'el objeto';
+          return `Usa "${item}"${condNarrative}.`;
+        }
+        case 'stopcasting':
+          return `Corta el lanzamiento actual inmediatamente.`;
+        case 'cancelaura': {
+          const aura = resolveBilingualValue(blk, 'param').trim();
+          return `Cancela el beneficio "${aura}".`;
+        }
+        case 'startattack':
+          return `Inicia auto-ataque cuerpo a cuerpo${condNarrative}.`;
+        case 'petattack':
+          return `Ordena a la mascota atacar${condNarrative || ' al objetivo actual'}.`;
+        case 'petfollow':
+          return `Ordena a la mascota seguirte${condNarrative}.`;
+        case 'petpassive':
+          return `Pone a la mascota en modo pasivo.`;
+        case 'dismount':
+          return `Desmonta${condNarrative}.`;
+        case 'equip': {
+          const item = resolveBilingualValue(blk, 'param').trim();
+          return `Equipa "${item}"${condNarrative}.`;
+        }
+        case 'equipslot16': {
+          const w = resolveBilingualValue(blk, 'param').trim();
+          return `Equipa "${w}" en Mano Derecha (16)${condNarrative}.`;
+        }
+        case 'equipslot17': {
+          const s = resolveBilingualValue(blk, 'param').trim();
+          return `Equipa "${s}" en Mano Izquierda / Escudo (17)${condNarrative}.`;
+        }
+        case 'target': {
+          const n = resolveBilingualValue(blk, 'param').trim();
+          return `Selecciona objetivo${n ? ` "${n}"` : ''}${condNarrative}.`;
+        }
+        case 'focus':
+          return `Establece el foco${condNarrative || ' en el objetivo actual'}.`;
+        case 'assist':
+          return `Asiste al aliado${condNarrative}.`;
+        case 'cleartarget':
+          return `Limpia el objetivo actual${condNarrative}.`;
+        case 'targetenemy':
+          return `Selecciona al enemigo más cercano${condNarrative}.`;
+        default:
+          return '';
+      }
+    }
+
+    function renderCanvas() {
+      const container = document.getElementById('canvasDropzone');
+      document.getElementById('blockCountBadge').textContent = `${canvasBlocks.length} ${canvasBlocks.length === 1 ? t('lineSingular') : t('linePlural')}`;
+
+      if (canvasBlocks.length === 0) {
+        container.innerHTML = `
+          <div class="h-full min-h-[300px] flex flex-col items-center justify-center text-center p-6 border border-dashed border-[#252934] rounded-md">
+            <p class="text-xs font-medium text-zinc-400 mb-1">${t('emptyCanvasTitle')}</p>
+            <p class="text-[11px] text-zinc-500 max-w-sm mb-4">
+              ${t('emptyCanvasSub')}
+            </p>
+            <div class="flex flex-wrap justify-center gap-2">
+              <button onclick="loadTemplate('healer_mouseover')" class="px-2.5 py-1 rounded bg-[#1b1f29] hover:bg-[#232834] border border-[#2c313f] text-xs text-zinc-300">
+                ${t('emptyBtnHealer')}
+              </button>
+              <button onclick="loadTemplate('warrior_paladin')" class="px-2.5 py-1 rounded bg-[#1b1f29] hover:bg-[#232834] border border-[#2c313f] text-xs text-zinc-300">
+                ${t('emptyBtnWarrior')}
+              </button>
+            </div>
+          </div>
+        `;
+        updateCompiledOutput();
+        return;
+      }
+
+      container.innerHTML = '';
+
+      canvasBlocks.forEach((blk, idx) => {
+        const def = PALETTE_BLOCKS.find(b => b.type === blk.type);
+        const wrapper = document.createElement('div');
+        wrapper.className = 'space-y-1';
+
+        const blockEl = document.createElement('div');
+        blockEl.className = `scratch-block scratch-stack-block ${blk.colorClass} p-2.5`;
+        blockEl.draggable = true;
+
+        blockEl.addEventListener('dragstart', (e) => {
+          const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : '';
+          if (tag === 'INPUT' || tag === 'SELECT' || tag === 'BUTTON') {
+            e.preventDefault();
+            return;
+          }
+          e.dataTransfer.setData('application/json', JSON.stringify({
+            dragKind: 'REORDER_BLOCK',
+            blockId: blk.id
+          }));
+        });
+
+        blockEl.addEventListener('dragover', (e) => {
+          e.preventDefault();
+        });
+
+        blockEl.addEventListener('drop', (e) => handleBlockReorderDrop(e, blk.id));
+
+        let condGroupsHtml = '';
+        if (blk.acceptsCond) {
+          if (!blk.condGroups || blk.condGroups.length === 0) {
+            blk.condGroups = [[]];
+          }
+          const groupsMarkup = blk.condGroups.map((grp, gIdx) => {
+            const pillsMarkup = grp.map((token, cIdx) => {
+              const isForm = token.startsWith('form:');
+              return `
+                <span class="cat-cond text-[11px] font-mono inline-flex items-center gap-1">
+                  ${isForm
+                    ? `<button onclick="cycleFormNumber('${blk.id}', ${gIdx}, ${cIdx})" class="underline hover:text-white" title="1..4">${token}</button>`
+                    : `<span>${token}</span>`
+                  }
+                  <button onclick="removeConditionFromGroup('${blk.id}', ${gIdx}, ${cIdx})" class="text-orange-300/70 hover:text-white">×</button>
+                </span>
+              `;
+            }).join('<span class="text-zinc-500 font-mono text-xs">,</span>');
+
+            const removeGroupBtn = blk.condGroups.length > 1
+              ? `<button onclick="removeOrGroup('${blk.id}', ${gIdx})" class="text-[10px] text-zinc-500 hover:text-rose-400 px-1">✕</button>`
+              : '';
+
+            return `
+              <div
+                class="cond-slot px-2 py-0.5 inline-flex flex-wrap items-center gap-1 min-h-[26px] cursor-pointer"
+                ondragover="handleSlotDragOver(event)"
+                ondragleave="handleSlotDragLeave(event)"
+                ondrop="handleSlotDrop(event, '${blk.id}', ${gIdx})"
+                onclick="if(selectedPaletteCond) addConditionToGroup('${blk.id}', ${gIdx}, selectedPaletteCond)"
+              >
+                <span class="font-mono text-zinc-500 text-xs">[</span>
+                ${pillsMarkup || `<span class="text-[10px] text-zinc-500 font-mono">${t('addCondSlot')}</span>`}
+                <span class="font-mono text-zinc-500 text-xs">]</span>
+                ${removeGroupBtn}
+              </div>
+            `;
+          }).join('<span class="text-[10px] text-zinc-500 px-0.5 font-mono">OR</span>');
+
+          condGroupsHtml = `
+            <div class="flex flex-wrap items-center gap-1">
+              ${groupsMarkup}
+              <button
+                onclick="addOrGroup('${blk.id}')"
+                class="px-1.5 py-0.5 rounded bg-[#1f232e] hover:bg-[#282d3b] border border-[#2e3342] text-[10px] font-mono text-zinc-300 transition"
+              >
+                + OR
+              </button>
+            </div>
+          `;
+        }
+
+        let paramsHtml = '';
+        if (def.hasSpell) {
+          const spellVal = resolveBilingualValue(blk, 'spell');
+          const rankOptions = [
+            { val: 'auto', label: t('autoMaxRank') },
+            ...Array.from({ length: 12 }, (_, i) => ({
+              val: String(i + 1),
+              label: `${t('rankWord')} ${i + 1}`
+            }))
+          ];
+
+          paramsHtml = `
+            <div class="flex flex-wrap items-center gap-1.5">
+              <input
+                type="text"
+                list="foreverSpellsList"
+                value="${escapeHtml(spellVal)}"
+                oninput="updateBlockSpell('${blk.id}', this.value)"
+                placeholder="${uiLang === 'es' ? 'Hechizo...' : 'Spell...'}"
+                class="scratch-input w-40 md:w-48"
+              />
+              <select
+                onchange="updateBlockField('${blk.id}', 'rank', this.value)"
+                class="scratch-input cursor-pointer text-zinc-300"
+              >
+                ${rankOptions.map(o => `<option value="${o.val}" ${blk.rank === o.val ? 'selected' : ''} class="bg-[#111318] text-zinc-200">${o.label}</option>`).join('')}
+              </select>
+            </div>
+          `;
+        } else if (def.hasReset) {
+          const seqVal = resolveBilingualValue(blk, 'seq');
+          paramsHtml = `
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="text-xs font-mono text-zinc-400">reset=</span>
+              <input
+                type="text"
+                value="${escapeHtml(blk.reset)}"
+                oninput="updateBlockField('${blk.id}', 'reset', this.value)"
+                placeholder="8"
+                class="scratch-input w-16 font-mono"
+              />
+              <input
+                type="text"
+                value="${escapeHtml(seqVal)}"
+                oninput="updateBlockBilingual('${blk.id}', 'seq', this.value)"
+                placeholder="${uiLang === 'es' ? 'Hechizo 1, Hechizo 2...' : 'Spell 1, Spell 2...'}"
+                class="scratch-input w-44 md:w-56"
+              />
+            </div>
+          `;
+        } else if (def.hasUseMode) {
+          const itemVal = resolveBilingualValue(blk, 'item');
+          paramsHtml = `
+            <div class="flex flex-wrap items-center gap-1.5">
+              <select
+                onchange="updateBlockField('${blk.id}', 'useMode', this.value); renderCanvas();"
+                class="scratch-input cursor-pointer text-zinc-300"
+              >
+                <option value="13" ${blk.useMode === '13' ? 'selected' : ''} class="bg-[#111318]">${t('slot13')}</option>
+                <option value="14" ${blk.useMode === '14' ? 'selected' : ''} class="bg-[#111318]">${t('slot14')}</option>
+                <option value="item" ${blk.useMode === 'item' ? 'selected' : ''} class="bg-[#111318]">${t('itemNameOpt')}</option>
+              </select>
+              ${blk.useMode === 'item' ? `
+                <input
+                  type="text"
+                  list="foreverItemsList"
+                  value="${escapeHtml(itemVal)}"
+                  oninput="updateBlockBilingual('${blk.id}', 'item', this.value)"
+                  placeholder="${uiLang === 'es' ? 'Objeto...' : 'Item...'}"
+                  class="scratch-input w-40"
+                />
+              ` : ''}
+            </div>
+          `;
+        } else if (def.hasParam) {
+          const paramVal = resolveBilingualValue(blk, 'param');
+          const placeholder = uiLang === 'es' ? def.paramPlaceholderEs : def.paramPlaceholderEn;
+          paramsHtml = `
+            <input
+              type="text"
+              list="foreverItemsList"
+              value="${escapeHtml(paramVal)}"
+              oninput="updateBlockBilingual('${blk.id}', 'param', this.value)"
+              placeholder="${escapeHtml(placeholder || '')}"
+              class="scratch-input w-44 md:w-52"
+            />
+          `;
+        }
+
+        const compiledLinePreview = compileBlockLine(blk);
+        const explanationText = explainBlockNatural(blk);
+        const whEntry = resolveBlockWhEntry(blk);
+        const fallbackBlockIcons = {
+          showtooltip: 'inv_misc_questionmark',
+          show: 'inv_misc_book_09',
+          cast: 'spell_frost_frostbolt02',
+          castsequence: 'spell_shadow_requiem',
+          use: 'inv_jewelry_talisman_08',
+          stopcasting: 'spell_frost_stun',
+          cancelaura: 'spell_holy_dispelmagic',
+          startattack: 'ability_meleedamage',
+          petattack: 'ability_hunter_pet_wolf',
+          petfollow: 'ability_hunter_mendpet',
+          petpassive: 'ability_seal',
+          dismount: 'ability_mount_ridinghorse',
+          equip: 'inv_staff_13',
+          equipslot16: 'inv_sword_04',
+          equipslot17: 'inv_shield_06',
+          target: 'ability_hunter_snipershot',
+          focus: 'ability_hunter_mastermarksman',
+          assist: 'ability_warrior_rallyingcry',
+          cleartarget: 'spell_shadow_sacrificialshield',
+          targetenemy: 'ability_marksmanship'
+        };
+        const resolvedIcon = ((whEntry && whEntry.icon) || fallbackBlockIcons[blk.type] || 'inv_misc_questionmark').toLowerCase();
+
+        blockEl.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="cursor-grab text-zinc-500 hover:text-zinc-300 font-mono text-[11px] select-none">#${idx + 1}</span>
+              <div
+                class="relative w-6 h-6 rounded border border-[#3a4152] overflow-hidden shrink-0 cursor-help bg-[#0d0f14]"
+                onmouseenter="showBlockWhTooltip(event, '${blk.id}')"
+                onmousemove="moveWhTooltip(event)"
+                onmouseleave="hideWhTooltip()"
+              >
+                <img id="blkicon_${blk.id}" src="https://wow.zamimg.com/images/wow/icons/medium/${encodeURIComponent(resolvedIcon)}.jpg" alt="" class="w-full h-full object-cover" />
+              </div>
+              <span
+                class="cmd-badge font-mono font-semibold text-xs px-2 py-0.5 rounded border cursor-help"
+                onmouseenter="showBlockWhTooltip(event, '${blk.id}')"
+                onmousemove="moveWhTooltip(event)"
+                onmouseleave="hideWhTooltip()"
+              >
+                ${def.labelEs}
+              </span>
+              ${condGroupsHtml}
+              <div
+                onmouseenter="showBlockWhTooltip(event, '${blk.id}')"
+                onmousemove="moveWhTooltip(event)"
+                onmouseleave="hideWhTooltip()"
+              >
+                ${paramsHtml}
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1 ml-auto text-zinc-400">
+              <button
+                onclick="toggleBlockExplanation('${blk.id}')"
+                class="px-1.5 py-0.5 rounded text-[10px] ${blk.showExplain ? 'bg-[#252934] text-zinc-200' : 'hover:bg-[#1f232d] text-zinc-500'} transition"
+              >
+                Info
+              </button>
+              <button onclick="moveBlock('${blk.id}', -1)" class="w-5 h-5 rounded hover:bg-[#232733] text-xs flex items-center justify-center">↑</button>
+              <button onclick="moveBlock('${blk.id}', 1)" class="w-5 h-5 rounded hover:bg-[#232733] text-xs flex items-center justify-center">↓</button>
+              <button onclick="duplicateBlock('${blk.id}')" class="w-5 h-5 rounded hover:bg-[#232733] text-xs flex items-center justify-center">⧉</button>
+              <button onclick="removeBlockFromCanvas('${blk.id}')" class="w-5 h-5 rounded hover:bg-rose-950/60 hover:text-rose-300 text-xs flex items-center justify-center">✕</button>
+            </div>
+          </div>
+
+          <div class="mt-2 pt-1.5 border-t border-[#222631] flex items-center justify-between text-[11px] font-mono text-zinc-400">
+            <code id="preview_${blk.id}" class="truncate text-zinc-300">${escapeHtml(compiledLinePreview)}</code>
+            <span id="chars_${blk.id}" class="text-[10px] text-zinc-600 shrink-0">${compiledLinePreview.length}c</span>
+          </div>
+        `;
+
+        wrapper.appendChild(blockEl);
+
+        if (blk.showExplain) {
+          const explainEl = document.createElement('div');
+          explainEl.className = 'ml-3 px-2.5 py-1 rounded bg-[#12141b] border-l-2 border-zinc-700 text-[11px] text-zinc-400';
+          explainEl.innerHTML = `<span id="explain_${blk.id}">${escapeHtml(explanationText)}</span>`;
+          wrapper.appendChild(explainEl);
+        }
+
+        container.appendChild(wrapper);
+      });
+
+      updateCompiledOutput();
+    }
+
+    function refreshBlockInlinePreview(blk) {
+      const compiled = compileBlockLine(blk);
+      const previewEl = document.getElementById(`preview_${blk.id}`);
+      const charsEl = document.getElementById(`chars_${blk.id}`);
+      const explainEl = document.getElementById(`explain_${blk.id}`);
+      const iconEl = document.getElementById(`blkicon_${blk.id}`);
+      if (previewEl) previewEl.textContent = compiled;
+      if (charsEl) charsEl.textContent = `${compiled.length}c`;
+      if (explainEl) explainEl.textContent = explainBlockNatural(blk);
+      if (iconEl) {
+        const whEntry = resolveBlockWhEntry(blk);
+        if (whEntry && whEntry.icon) {
+          iconEl.src = `https://wow.zamimg.com/images/wow/icons/medium/${encodeURIComponent(whEntry.icon.toLowerCase())}.jpg`;
+        }
+      }
+      updateSelectedIconPreview();
+    }
+
+    function updateBlockField(blockId, field, value) {
+      const blk = canvasBlocks.find(b => b.id === blockId);
+      if (!blk) return;
+      blk[field] = value;
+      refreshBlockInlinePreview(blk);
+      updateCompiledOutput();
+    }
+
+    function updateBlockSpell(blockId, value) {
+      const blk = canvasBlocks.find(b => b.id === blockId);
+      if (!blk) return;
+      const match = SPELL_DICTIONARY.find(
+        s => s.es.toLowerCase() === value.trim().toLowerCase() || s.en.toLowerCase() === value.trim().toLowerCase()
+      );
+      if (match) {
+        blk.spellEs = match.es;
+        blk.spellEn = match.en;
+      } else {
+        blk.spellEs = value;
+        blk.spellEn = value;
+      }
+      refreshBlockInlinePreview(blk);
+      updateCompiledOutput();
+    }
+
+    function updateBlockBilingual(blockId, prefix, value) {
+      const blk = canvasBlocks.find(b => b.id === blockId);
+      if (!blk) return;
+      const itemMatch = whLookup(value);
+      if (itemMatch) {
+        blk[prefix + 'Es'] = itemMatch.es;
+        blk[prefix + 'En'] = itemMatch.en;
+      } else {
+        blk[prefix + 'Es'] = value;
+        blk[prefix + 'En'] = value;
+      }
+      refreshBlockInlinePreview(blk);
+      updateCompiledOutput();
+    }
+
+    function updateCompiledOutput() {
+      const compiledLines = canvasBlocks.map(compileBlockLine).filter(Boolean);
+      const fullCode = compiledLines.join('\n');
+
+      const codeArea = document.getElementById('macroOutputCode');
+      codeArea.value = fullCode;
+
+      const charLen = fullCode.length;
+      const maxChars = 255;
+      const pct = Math.min(100, (charLen / maxChars) * 100);
+
+      const countLabel = document.getElementById('charCountLabel');
+      const progressBar = document.getElementById('charProgressBar');
+      const warningEl = document.getElementById('charLimitWarning');
+
+      countLabel.textContent = `${charLen} / ${maxChars}`;
+
+      if (charLen > maxChars) {
+        countLabel.className = 'font-mono font-medium text-rose-400';
+        progressBar.className = 'h-full bg-rose-500 transition-all duration-200';
+        warningEl.classList.remove('hidden');
+      } else if (charLen > 215) {
+        countLabel.className = 'font-mono font-medium text-amber-400';
+        progressBar.className = 'h-full bg-amber-400 transition-all duration-200';
+        warningEl.classList.add('hidden');
+      } else {
+        countLabel.className = 'font-mono font-medium text-zinc-300';
+        progressBar.className = 'h-full bg-zinc-400 transition-all duration-200';
+        warningEl.classList.add('hidden');
+      }
+      progressBar.style.width = `${pct}%`;
+
+      const summaryContainer = document.getElementById('globalNaturalSummary');
+      if (canvasBlocks.length === 0) {
+        summaryContainer.innerHTML = `<p class="text-zinc-600">${t('emptySummary')}</p>`;
+      } else {
+        summaryContainer.innerHTML = canvasBlocks.map((b, i) => `
+          <div class="flex items-start gap-1.5">
+            <span class="font-mono text-zinc-500">${i + 1}.</span>
+            <span>${escapeHtml(explainBlockNatural(b))}</span>
+          </div>
+        `).join('');
+      }
+      updateSelectedIconPreview();
+    }
+
+    function setClientLanguage(lang) {
+      clientLang = lang;
+      const indicator = document.getElementById('clientRankIndicator');
+      if (indicator) indicator.textContent = lang === 'es' ? '(Rango X)' : '(Rank X)';
+
+      populateDatalists();
+      renderContextualPalette();
+      renderCanvas();
+    }
+
+    function setMacroScope(scope) {
+      macroScope = scope;
+      const genBtn = document.getElementById('scopeGeneralBtn');
+      const charBtn = document.getElementById('scopeCharBtn');
+      const badge = document.getElementById('scopeBadgeLabel');
+
+      if (scope === 'general') {
+        genBtn.className = 'py-1 px-2 rounded text-[11px] font-medium transition-all bg-[#222631] text-zinc-100';
+        charBtn.className = 'py-1 px-2 rounded text-[11px] font-medium transition-all text-zinc-500 hover:text-zinc-300';
+        badge.textContent = t('scopeGeneral');
+      } else {
+        charBtn.className = 'py-1 px-2 rounded text-[11px] font-medium transition-all bg-[#222631] text-zinc-100';
+        genBtn.className = 'py-1 px-2 rounded text-[11px] font-medium transition-all text-zinc-500 hover:text-zinc-300';
+        badge.textContent = t('scopeChar');
+      }
+    }
+
+    function updateMacroMeta() {
+      const input = document.getElementById('macroNameInput');
+      const counter = document.getElementById('macroNameCounter');
+      const len = input.value.length;
+      counter.textContent = `${len} / 16`;
+    }
+
+    function updateSelectedIconPreview() {
+      const imgEl = document.getElementById('selectedIconImg');
+      const nameEl = document.getElementById('selectedIconName');
+      if (!imgEl || !nameEl) return;
+
+      let resolvedIcon = selectedIcon.name;
+      let resolvedLabel = selectedIcon.name;
+
+      if (selectedIcon.id === 'question') {
+        for (const b of canvasBlocks) {
+          const wh = resolveBlockWhEntry(b);
+          if (wh && wh.icon) {
+            resolvedIcon = wh.icon;
+            resolvedLabel = `${selectedIcon.name} → ${clientLang === 'es' ? wh.es : wh.en}`;
+            break;
+          }
+        }
+      }
+
+      imgEl.src = whIconUrl(resolvedIcon, 'medium');
+      nameEl.textContent = resolvedLabel;
+    }
+
+    function renderIconPicker() {
+      const grid = document.getElementById('iconPickerGrid');
+      grid.innerHTML = '';
+      WOW_ICONS.forEach(ic => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `wow-icon-slot ${selectedIcon.id === ic.id ? 'active' : ''}`;
+        btn.title = ic.name;
+        btn.innerHTML = `<img src="${whIconUrl(ic.name, 'medium')}" alt="${escapeHtml(ic.name)}" class="w-6 h-6 rounded-[3px] object-cover" loading="lazy">`;
+        btn.onclick = () => {
+          selectedIcon = ic;
+          updateSelectedIconPreview();
+          renderIconPicker();
+        };
+        grid.appendChild(btn);
+      });
+      updateSelectedIconPreview();
+    }
+
+    function copyMacroToClipboard() {
+      const code = document.getElementById('macroOutputCode').value;
+      if (!code) return;
+      navigator.clipboard.writeText(code).then(() => {
+        const toast = document.getElementById('statusToast');
+        toast.textContent = t('copiedToast');
+        toast.classList.remove('opacity-0');
+        setTimeout(() => toast.classList.add('opacity-0'), 2400);
+      });
+    }
+
+    function loadTemplate(templateKey) {
+      canvasBlocks = [];
+      const nameInput = document.getElementById('macroNameInput');
+
+      if (templateKey === 'hunter_warlock') {
+        nameInput.value = 'PetAtk+MaxRank';
+        selectedIcon = WOW_ICONS.find(i => i.id === 'paw') || WOW_ICONS[0];
+        setMacroScope('character');
+
+        addBlockToCanvas('showtooltip');
+        addBlockToCanvas('petattack', {
+          condGroups: [['harm', 'nodead']]
+        });
+        addBlockToCanvas('cast', {
+          condGroups: [['harm', 'nodead']],
+          spellEs: 'Descarga de las Sombras',
+          spellEn: 'Shadow Bolt',
+          rank: 'auto'
+        });
+      } else if (templateKey === 'warrior_paladin') {
+        nameInput.value = 'EspadaYEscudo';
+        selectedIcon = WOW_ICONS.find(i => i.id === 'shield') || WOW_ICONS[0];
+        setMacroScope('character');
+
+        addBlockToCanvas('showtooltip', {
+          paramEs: 'Defensora de Ventormenta',
+          paramEn: 'Stormwind Defender'
+        });
+        addBlockToCanvas('equipslot16', {
+          condGroups: [[]],
+          paramEs: 'Espada bastarda de valor',
+          paramEn: 'Valor Bastard Sword'
+        });
+        addBlockToCanvas('equipslot17', {
+          condGroups: [[]],
+          paramEs: 'Defensora de Ventormenta',
+          paramEn: 'Stormwind Defender'
+        });
+        addBlockToCanvas('cast', {
+          condGroups: [['combat']],
+          spellEs: 'Actitud defensiva',
+          spellEn: 'Defensive Stance',
+          rank: 'auto'
+        });
+      } else if (templateKey === 'healer_mouseover') {
+        nameInput.value = 'CurarMouseover';
+        selectedIcon = WOW_ICONS.find(i => i.id === 'heal') || WOW_ICONS[0];
+        setMacroScope('character');
+
+        addBlockToCanvas('showtooltip');
+        addBlockToCanvas('cast', {
+          condGroups: [
+            ['mod:shift', '@mouseover', 'help', 'nodead'],
+            ['mod:shift', '@player']
+          ],
+          spellEs: 'Sanación relámpago',
+          spellEn: 'Flash Heal',
+          rank: '1'
+        });
+        addBlockToCanvas('cast', {
+          condGroups: [
+            ['@mouseover', 'help', 'nodead'],
+            ['@player']
+          ],
+          spellEs: 'Sanación relámpago',
+          spellEn: 'Flash Heal',
+          rank: 'auto'
+        });
+      } else if (templateKey === 'mage_focus') {
+        nameInput.value = 'FrostFocusCC';
+        selectedIcon = WOW_ICONS.find(i => i.id === 'frostbolt') || WOW_ICONS[0];
+        setMacroScope('character');
+
+        addBlockToCanvas('showtooltip');
+        addBlockToCanvas('stopcasting');
+        addBlockToCanvas('cast', {
+          condGroups: [
+            ['mod:shift', '@focus', 'harm', 'nodead'],
+            ['mod:shift', '@mouseover', 'harm', 'nodead']
+          ],
+          spellEs: 'Polimorfia',
+          spellEn: 'Polymorph',
+          rank: '1'
+        });
+        addBlockToCanvas('cast', {
+          condGroups: [
+            ['@focus', 'harm', 'nodead'],
+            ['harm', 'nodead']
+          ],
+          spellEs: 'Explosión de Fuego',
+          spellEn: 'Fire Blast',
+          rank: 'auto'
+        });
+      } else if (templateKey === 'racial_trinket_burst') {
+        nameInput.value = 'BurstRacial13';
+        selectedIcon = WOW_ICONS.find(i => i.id === 'trinket') || WOW_ICONS[0];
+        setMacroScope('character');
+
+        const raceObj = WOW_RACES.find(r => r.id === activeRaceFilter);
+        const racialEs = (raceObj && raceObj.racialEs) ? raceObj.racialEs : 'Furia sangrienta';
+        const racialEn = (raceObj && raceObj.racialEn) ? raceObj.racialEn : 'Blood Fury';
+
+        addBlockToCanvas('showtooltip');
+        addBlockToCanvas('cast', {
+          condGroups: [['combat']],
+          spellEs: racialEs,
+          spellEn: racialEn,
+          rank: 'auto'
+        });
+        addBlockToCanvas('use', {
+          condGroups: [['combat']],
+          useMode: '13'
+        });
+        addBlockToCanvas('cast', {
+          condGroups: [['harm', 'nodead']],
+          spellEs: 'Descarga de escarcha',
+          spellEn: 'Frostbolt',
+          rank: 'auto'
+        });
+      } else if (templateKey === 'racial_defensive_cleanse') {
+        nameInput.value = 'DefRacialPot';
+        selectedIcon = WOW_ICONS.find(i => i.id === 'shield') || WOW_ICONS[0];
+        setMacroScope('general');
+
+        const raceObj = WOW_RACES.find(r => r.id === activeRaceFilter);
+        const racialEs = (raceObj && raceObj.racialEs) ? raceObj.racialEs : 'Voluntad de los Renegados';
+        const racialEn = (raceObj && raceObj.racialEn) ? raceObj.racialEn : 'Will of the Forsaken';
+
+        addBlockToCanvas('showtooltip');
+        addBlockToCanvas('stopcasting');
+        addBlockToCanvas('cast', {
+          condGroups: [[]],
+          spellEs: racialEs,
+          spellEn: racialEn,
+          rank: 'auto'
+        });
+        addBlockToCanvas('use', {
+          condGroups: [['combat']],
+          useMode: 'item',
+          itemEs: 'Piedra de salud demoníaca',
+          itemEn: 'Demonic Healthstone'
+        });
+      } else if (templateKey === 'eng_grenade_cursor') {
+        nameInput.value = 'GranadaCursor';
+        selectedIcon = WOW_ICONS.find(i => i.id === 'fireball') || WOW_ICONS[0];
+        setMacroScope('general');
+
+        addBlockToCanvas('showtooltip', {
+          paramEs: 'Granada de hierro',
+          paramEn: 'Iron Grenade'
+        });
+        addBlockToCanvas('stopcasting');
+        addBlockToCanvas('use', {
+          condGroups: [['@cursor']],
+          useMode: 'item',
+          itemEs: 'Granada de hierro',
+          itemEn: 'Iron Grenade'
+        });
+      } else if (templateKey === 'rogue_stealth_kick') {
+        nameInput.value = 'PatadaSiniestro';
+        selectedIcon = WOW_ICONS.find(i => i.id === 'stealth') || WOW_ICONS[0];
+        setMacroScope('character');
+
+        addBlockToCanvas('showtooltip');
+        addBlockToCanvas('startattack', {
+          condGroups: [['harm', 'nodead']]
+        });
+        addBlockToCanvas('cast', {
+          condGroups: [
+            ['mod:shift', '@mouseover', 'harm', 'nodead'],
+            ['mod:shift', 'harm', 'nodead']
+          ],
+          spellEs: 'Patada',
+          spellEn: 'Kick',
+          rank: 'auto'
+        });
+        addBlockToCanvas('cast', {
+          condGroups: [['harm', 'nodead']],
+          spellEs: 'Golpe siniestro',
+          spellEn: 'Sinister Strike',
+          rank: 'auto'
+        });
+      }
+
+      updateMacroMeta();
+      renderIconPicker();
+      renderCanvas();
+      updateSelectedIconPreview();
+    }
+
+    function openHelpModal() {
+      const m = document.getElementById('helpModal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function closeHelpModal() {
+      const m = document.getElementById('helpModal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    window.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
